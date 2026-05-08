@@ -4,7 +4,7 @@ hotspot_detector.py — DBSCAN-Based Pollution Hotspot Detection
 Clusters GPS-tagged readings using DBSCAN.  For each cluster:
   • Computes centroid (mean lat/lon)
   • Computes affected radius (max distance from centroid)
-  • Computes severity (mean TDS, Turbidity, Nitrate)
+  • Computes severity (mean TDS, Turbidity, Nitrate, pH)
 """
 
 from __future__ import annotations
@@ -66,8 +66,8 @@ class HotspotDetector:
         return R * 2 * math.asin(math.sqrt(a))
 
     @staticmethod
-    def _severity_label(avg_tds: float, avg_turb: float, avg_nitr: float) -> str:
-        """Determine cluster severity from average sensor values."""
+    def _severity_label(avg_tds: float, avg_turb: float, avg_nitr: float, avg_ph: float = 7.0) -> str:
+        """Determine cluster severity from average sensor values (incl. pH)."""
         score = 0
         if avg_tds > 600:
             score += 2
@@ -80,6 +80,11 @@ class HotspotDetector:
         if avg_nitr > 25:
             score += 2
         elif avg_nitr > 12:
+            score += 1
+        # pH: deviation from neutral range (6.5–8.5) adds severity
+        if avg_ph < 6.0 or avg_ph > 9.0:
+            score += 2
+        elif avg_ph < 6.5 or avg_ph > 8.5:
             score += 1
         if score >= 4:
             return "HIGH"
@@ -123,12 +128,13 @@ class HotspotDetector:
             avg_tds = np.mean([r.tds for r in members if r.tds is not None]) if any(r.tds for r in members) else 0
             avg_turb = np.mean([r.turbidity for r in members if r.turbidity is not None]) if any(r.turbidity for r in members) else 0
             avg_nitr = np.mean([r.nitrate for r in members if r.nitrate is not None]) if any(r.nitrate for r in members) else 0
+            avg_ph = np.mean([r.ph for r in members if r.ph is not None]) if any(r.ph is not None for r in members) else 7.0
 
             cluster = PollutionCluster(
                 cluster_id=int(cid),
                 center=(round(float(mean_lat), 6), round(float(mean_lon), 6)),
                 readings=members,
-                severity=self._severity_label(float(avg_tds), float(avg_turb), float(avg_nitr)),
+                severity=self._severity_label(float(avg_tds), float(avg_turb), float(avg_nitr), float(avg_ph)),
                 affected_radius_m=round(radius, 1),
             )
             clusters.append(cluster)

@@ -115,13 +115,15 @@ export default function Dashboard() {
   const tds = useAnimatedValue(r.tds || 0)
   const turb = useAnimatedValue(r.turbidity || 0)
   const nitrate = useAnimatedValue(r.nitrate || 0)
+  const ph = useAnimatedValue(r.ph || 0)
   const temp = useAnimatedValue(r.temperature || 0)
   const level = useAnimatedValue(r.level || 0)
+  const sensorMode = r.sensor_mode || '--'
 
   const healthScore = Math.round(Math.max(0, Math.min(100, 100 - tds / 10 - turb * 10 - nitrate * 1.5)))
   const healthColor = healthScore > 70 ? '#44cc66' : healthScore > 40 ? '#ffaa00' : '#ff4455'
 
-  const sparkData = history.map(h => ({ tds: h.tds, turb: h.turbidity, nit: h.nitrate, temp: h.temperature }))
+  const sparkData = history.map(h => ({ tds: h.tds, turb: h.turbidity, nit: h.nitrate, ph: h.ph, temp: h.temperature }))
 
   const formatUptime = () => {
     const h = Math.floor(uptime / 3600), m = Math.floor((uptime % 3600) / 60), s = uptime % 60
@@ -146,6 +148,15 @@ export default function Dashboard() {
       {/* Pipeline visualization */}
       <PipelineViz />
 
+      {/* Sensor Mode Indicator */}
+      <div style={{ background: '#0d1117', border: `1px solid ${sensorMode === 'pH' ? '#6c5ce7' : '#ffaa00'}40`, borderRadius: 10, padding: '8px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, transition: 'border-color 0.5s' }}>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: sensorMode === 'pH' ? '#6c5ce7' : '#ffaa00', animation: 'highPulse 1.5s infinite' }} />
+        <span style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: 0.5 }}>Color Sensor:</span>
+        <span style={{ fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-mono)', color: sensorMode === 'pH' ? '#6c5ce7' : '#ffaa00' }}>
+          {sensorMode === 'pH' ? 'pH Mode' : sensorMode === 'Nitrate' ? 'Nitrate Mode' : '--'}
+        </span>
+      </div>
+
       {/* Health Score + Key Metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 16, marginBottom: 20 }}>
         {/* Health ring */}
@@ -160,11 +171,12 @@ export default function Dashboard() {
         </div>
 
         {/* Metric cards with sparklines */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
           {[
             { label: 'TDS', value: tds, unit: 'ppm', fmt: 0, key: 'tds', color: '#f0f0f0', max: 1000 },
             { label: 'Turbidity', value: turb, unit: 'NTU', fmt: 2, key: 'turb', color: '#888', max: 5 },
-            { label: 'Nitrate', value: nitrate, unit: 'ppm', fmt: 2, key: 'nit', color: '#ffaa00', max: 50 },
+            { label: 'Nitrate', value: nitrate, unit: 'ppm', fmt: 2, key: 'nit', color: sensorMode === 'Nitrate' ? '#ffaa00' : '#333', max: 50 },
+            { label: 'pH', value: ph, unit: 'pH', fmt: 2, key: 'ph', color: sensorMode === 'pH' ? '#6c5ce7' : '#333', max: 14 },
             { label: 'Temperature', value: temp, unit: 'C', fmt: 1, key: 'temp', color: '#44cc66', max: 35 },
           ].map(m => (
             <div key={m.label} style={{ background: '#0d1117', border: '1px solid #1a1a2e', borderRadius: 10, padding: '14px 16px', display: 'flex', flexDirection: 'column' }}>

@@ -37,6 +37,7 @@ from simulator.arduino_serial import ArduinoSerialReader, list_serial_ports
 from parser.water_parser import WaterParser
 from preprocessing.preprocessor import Preprocessor
 from models.nitrate_model import NitratePredictor
+from models.ph_model import pHPredictor
 from models.quality_classifier import WaterQualityClassifier
 from clustering.bloom_predictor import BloomPredictor
 from clustering.hotspot_detector import HotspotDetector
@@ -64,6 +65,7 @@ def pipeline_loop(
     parser: WaterParser,
     preprocessor: Preprocessor,
     nitrate_model: NitratePredictor,
+    ph_model: pHPredictor,
     quality_clf: WaterQualityClassifier,
     bloom_predictor: BloomPredictor,
     storage: StorageEngine,
@@ -82,6 +84,13 @@ def pipeline_loop(
     Runs in a daemon thread so it does not block the API server.
     """
     logger.info("Pipeline loop started (interval=%.1fs).", interval)
+    start_time = time.time()
+    logger.info("Color sensor alternates: pH (even minutes) ↔ Nitrate (odd minutes).")
+
+    # Carry-forward buffers — so both pH and Nitrate are always available
+    # even though the sensor only measures one at a time.
+    last_known_nitrate: float | None = None
+    last_known_ph: float | None = None
 
     for raw_line in data_source.stream(interval=interval):
         # ── Step 1: Parse ──────────────────────────────────────────
@@ -93,30 +102,54 @@ def pipeline_loop(
         # ── Step 2: Preprocess (smooth + normalise) ────────────────
         preprocessor.process(reading)
 
-        # ── Step 3: Nitrate prediction ─────────────────────────────
+        # ── Step 3: Color sensor mode (alternates every 60 s) ──────
+        elapsed = time.time() - start_time
+        minute_block = int(elapsed // 60)
+        sensor_mode = "pH" if minute_block % 2 == 0 else "Nitrate"
+        reading.sensor_mode = sensor_mode
+
         rgb_norm = getattr(reading, "_rgb_norm", None)
         if rgb_norm is not None:
-            reading.nitrate = nitrate_model.predict(rgb_norm)
+            if sensor_mode == "Nitrate":
+                reading.nitrate = nitrate_model.predict(rgb_norm)
+                last_known_nitrate = reading.nitrate
+            else:
+                reading.ph = ph_model.predict(rgb_norm)
+                last_known_ph = reading.ph
 
-        # ── Step 4: Water quality classification ───────────────────
+        # ── Step 3b: Carry forward last known values ───────────────
+        # When in pH mode, use the last known nitrate (and vice versa)
+        # so downstream models always have both parameters available.
+        if reading.nitrate is None and last_known_nitrate is not None:
+            reading.nitrate = last_known_nitrate
+        if reading.ph is None and last_known_ph is not None:
+            reading.ph = last_known_ph
+
+        # ── Step 4: Water quality classification (uses pH) ─────────
         if all(v is not None for v in [reading.tds, reading.turbidity, reading.nitrate, reading.temperature]):
             reading.quality_label = quality_clf.classify(
                 reading.tds, reading.turbidity, reading.nitrate, reading.temperature,
+                reading.ph if reading.ph is not None else 7.0,
             )
 
-        # ── Step 5: Algal bloom risk ───────────────────────────────
+        # ── Step 5: Algal bloom risk (uses pH) ─────────────────────
         if reading.nitrate is not None and reading.temperature is not None:
-            reading.bloom_risk = bloom_predictor.predict(reading.nitrate, reading.temperature)
+            reading.bloom_risk = bloom_predictor.predict(
+                reading.nitrate, reading.temperature,
+                reading.ph if reading.ph is not None else 7.0,
+            )
 
         # ── Step 6: Store ──────────────────────────────────────────
         storage.add(reading)
 
         logger.info(
-            "Reading #%d | TDS=%.1f | Turb=%.2f | Nitrate=%.2f | Quality=%s | Bloom=%s",
+            "Reading #%d | Mode=%s | TDS=%.1f | Turb=%.2f | Nitrate=%s | pH=%s | Quality=%s | Bloom=%s",
             storage.count(),
+            reading.sensor_mode or "?",
             reading.tds or 0,
             reading.turbidity or 0,
-            reading.nitrate or 0,
+            f"{reading.nitrate:.2f}" if reading.nitrate is not None else "--",
+            f"{reading.ph:.2f}" if reading.ph is not None else "--",
             reading.quality_label or "?",
             reading.bloom_risk or "?",
         )
@@ -208,6 +241,7 @@ def main() -> None:
 
     logger.info("Training ML models...")
     nitrate_model = NitratePredictor(n_samples=2000)
+    ph_model = pHPredictor(n_samples=2000)
     quality_clf = WaterQualityClassifier(n_samples=3000)
     bloom_predictor = BloomPredictor()
 
@@ -220,7 +254,7 @@ def main() -> None:
     # ── Start background pipeline thread ──────────────────────────────
     pipeline_thread = threading.Thread(
         target=pipeline_loop,
-        args=(data_source, parser, preprocessor, nitrate_model, quality_clf, bloom_predictor, storage),
+        args=(data_source, parser, preprocessor, nitrate_model, ph_model, quality_clf, bloom_predictor, storage),
         kwargs={"interval": args.interval},
         daemon=True,
         name="PipelineThread",

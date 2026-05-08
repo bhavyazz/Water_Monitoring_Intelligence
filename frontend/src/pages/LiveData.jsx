@@ -79,9 +79,11 @@ export default function LiveData() {
   const tds = useAnim(r.tds || 0)
   const turb = useAnim(r.turbidity || 0)
   const nit = useAnim(r.nitrate || 0)
+  const ph = useAnim(r.ph || 0)
   const temp = useAnim(r.temperature || 0)
   const lvl = useAnim(r.level || 0)
   const rgb = r.rgb || [0, 0, 0]
+  const sensorMode = r.sensor_mode || '--'
 
   /* Determine danger thresholds */
   const tdsDanger = tds > 700
@@ -100,11 +102,22 @@ export default function LiveData() {
         </div>
       </div>
 
+      {/* Sensor Mode Indicator */}
+      <div style={{ background: '#0d1117', border: `1px solid ${sensorMode === 'pH' ? '#6c5ce7' : '#ffaa00'}40`, borderRadius: 10, padding: '10px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, transition: 'border-color 0.5s' }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: sensorMode === 'pH' ? '#6c5ce7' : '#ffaa00', animation: 'highPulse 1.5s infinite' }} />
+        <span style={{ fontSize: 11, color: '#555', textTransform: 'uppercase', letterSpacing: 0.6 }}>Color Sensor Mode:</span>
+        <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-mono)', color: sensorMode === 'pH' ? '#6c5ce7' : '#ffaa00' }}>
+          {sensorMode === 'pH' ? '🧪 pH Measurement' : sensorMode === 'Nitrate' ? '🔬 Nitrate Measurement' : '--'}
+        </span>
+        <span style={{ fontSize: 10, color: '#333', marginLeft: 'auto' }}>Alternates every 60s</span>
+      </div>
+
       {/* Main sensor gauges */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
         <ArcGauge value={tds} max={1000} label="TDS" unit="ppm" color="#f0f0f0" danger={tdsDanger} />
         <ArcGauge value={turb} max={5} label="Turbidity" unit="NTU" color="#888888" danger={turbDanger} />
-        <ArcGauge value={nit} max={50} label="Nitrate" unit="ppm" color="#ffaa00" danger={nitDanger} />
+        <ArcGauge value={nit} max={50} label="Nitrate" unit="ppm" color={sensorMode === 'Nitrate' ? '#ffaa00' : '#333'} danger={nitDanger} />
+        <ArcGauge value={ph} max={14} label="pH" unit="pH" color={sensorMode === 'pH' ? '#6c5ce7' : '#333'} />
         <ArcGauge value={temp} max={40} label="Temperature" unit="°C" color="#44cc66" />
         <ArcGauge value={lvl} max={500} label="Water Level" unit="mm" color="#2090b0" />
       </div>

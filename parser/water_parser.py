@@ -37,8 +37,10 @@ class WaterReading:
 
     # ── Enriched fields (filled by downstream stages) ─────────────
     nitrate: Optional[float] = None       # ppm  (predicted)
+    ph: Optional[float] = None            # pH value (predicted from colorimetric biosensor)
     quality_label: Optional[str] = None   # Safe / Moderate / Unsafe
     bloom_risk: Optional[str] = None      # LOW / MODERATE / HIGH
+    sensor_mode: Optional[str] = None     # "pH" or "Nitrate" — current color sensor mapping
 
     def to_dict(self) -> dict:
         """Serialise to a JSON-friendly dictionary."""
@@ -52,8 +54,10 @@ class WaterReading:
             "rgb": list(self.rgb) if self.rgb else None,
             "timestamp": self.timestamp.isoformat(),
             "nitrate": self.nitrate,
+            "ph": self.ph,
             "quality_label": self.quality_label,
             "bloom_risk": self.bloom_risk,
+            "sensor_mode": self.sensor_mode,
         }
 
 
