@@ -3,18 +3,25 @@ main.py — System Entry Point
 
 Wires together every module and runs the complete pipeline:
 
-  Simulated Data → Parser → Preprocessing →
+  Sensor Data → Parser → Preprocessing →
   ML Models → Rule Engine → Storage → API
 
 Architecture:
-  • A background thread runs the simulator + pipeline loop.
+  • A background thread runs the sensor-reading + pipeline loop.
   • The FastAPI server runs on the main thread (uvicorn).
   • All processed readings are stored in a shared StorageEngine.
   • API endpoints query the storage and run clustering on demand.
+
+Modes:
+  • --simulate  (default)  Use the built-in DataSimulator.
+  • --serial               Read live data from an Arduino over serial.
+      --port COM3          Serial port to connect to (default: auto-detect).
+      --baud 115200        Baud rate (default: 115200).
 """
 
 import sys
 import os
+import argparse
 import threading
 import logging
 import time
@@ -26,6 +33,7 @@ import uvicorn
 
 # ── Local modules ─────────────────────────────────────────────────────
 from simulator.data_simulator import DataSimulator
+from simulator.arduino_serial import ArduinoSerialReader, list_serial_ports
 from parser.water_parser import WaterParser
 from preprocessing.preprocessor import Preprocessor
 from models.nitrate_model import NitratePredictor
@@ -45,9 +53,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger("main")
 
+# Silence noisy uvicorn HTTP request logs
+logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+logging.getLogger("uvicorn.error").setLevel(logging.WARNING)
+logging.getLogger("uvicorn").setLevel(logging.WARNING)
+
 
 def pipeline_loop(
-    simulator: DataSimulator,
+    data_source,
     parser: WaterParser,
     preprocessor: Preprocessor,
     nitrate_model: NitratePredictor,
@@ -58,7 +71,7 @@ def pipeline_loop(
 ) -> None:
     """
     Infinite loop that:
-      1. Generates a simulated sensor string
+      1. Reads a sensor string (from simulator OR Arduino serial)
       2. Parses it into a WaterReading
       3. Smooths TDS / Turbidity
       4. Predicts nitrate from RGB
@@ -70,7 +83,7 @@ def pipeline_loop(
     """
     logger.info("Pipeline loop started (interval=%.1fs).", interval)
 
-    for raw_line in simulator.stream(interval=interval):
+    for raw_line in data_source.stream(interval=interval):
         # ── Step 1: Parse ──────────────────────────────────────────
         reading = parser.parse(raw_line)
         if reading is None:
@@ -109,15 +122,87 @@ def pipeline_loop(
         )
 
 
+def build_arg_parser() -> argparse.ArgumentParser:
+    """Build the CLI argument parser."""
+    ap = argparse.ArgumentParser(
+        description="Water Quality Monitoring System",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    mode = ap.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--simulate", action="store_true", default=True,
+        help="Use built-in data simulator (default).",
+    )
+    mode.add_argument(
+        "--serial", action="store_true",
+        help="Read live data from an Arduino over serial.",
+    )
+
+    ap.add_argument(
+        "--port", type=str, default=None,
+        help="Serial port for Arduino (e.g. COM3, /dev/ttyUSB0). "
+             "Auto-detected if omitted.",
+    )
+    ap.add_argument(
+        "--baud", type=int, default=115200,
+        help="Serial baud rate (default: 115200, must match Arduino sketch).",
+    )
+    ap.add_argument(
+        "--interval", type=float, default=2.0,
+        help="Pipeline loop interval in seconds (default: 2.0).",
+    )
+    ap.add_argument(
+        "--api-port", type=int, default=8000,
+        help="API server port (default: 8000).",
+    )
+    ap.add_argument(
+        "--list-ports", action="store_true",
+        help="Print available serial ports and exit.",
+    )
+
+    return ap
+
+
 def main() -> None:
     """Initialise all components and start the system."""
+
+    args = build_arg_parser().parse_args()
+
+    # ── List ports mode ───────────────────────────────────────────────
+    if args.list_ports:
+        ports = list_serial_ports()
+        if ports:
+            print("Available serial ports:")
+            for p in ports:
+                print(f"  • {p}")
+        else:
+            print("No serial ports detected.")
+        return
 
     logger.info("=" * 60)
     logger.info("  Water Quality Monitoring System — Starting Up")
     logger.info("=" * 60)
 
-    # ── Instantiate components ────────────────────────────────────
-    simulator = DataSimulator(seed=42)
+    # ── Choose data source ────────────────────────────────────────────
+    if args.serial:
+        # Auto-detect port if not specified
+        port = args.port
+        if port is None:
+            ports = list_serial_ports()
+            if not ports:
+                logger.error("No serial ports found!  Connect the Arduino and retry.")
+                sys.exit(1)
+            port = ports[0]
+            logger.info("Auto-detected serial port: %s", port)
+
+        data_source = ArduinoSerialReader(port=port, baudrate=args.baud)
+        logger.info("Mode: LIVE ARDUINO (port=%s, baud=%d)", port, args.baud)
+    else:
+        data_source = DataSimulator(seed=42)
+        logger.info("Mode: SIMULATOR (seed=42)")
+
+    # ── Instantiate components ────────────────────────────────────────
     parser = WaterParser()
     preprocessor = Preprocessor(window_size=5)
 
@@ -132,25 +217,25 @@ def main() -> None:
 
     logger.info("All components initialised.")
 
-    # ── Start background pipeline thread ──────────────────────────
+    # ── Start background pipeline thread ──────────────────────────────
     pipeline_thread = threading.Thread(
         target=pipeline_loop,
-        args=(simulator, parser, preprocessor, nitrate_model, quality_clf, bloom_predictor, storage),
-        kwargs={"interval": 2.0},
+        args=(data_source, parser, preprocessor, nitrate_model, quality_clf, bloom_predictor, storage),
+        kwargs={"interval": args.interval},
         daemon=True,
         name="PipelineThread",
     )
     pipeline_thread.start()
     logger.info("Pipeline thread started.")
 
-    # ── Create and run FastAPI server ─────────────────────────────
+    # ── Create and run FastAPI server ─────────────────────────────────
     app = create_app(storage, detector, source_id, SpreadAnalyzer, GeoJSONBuilder)
 
-    logger.info("Starting API server on http://0.0.0.0:8000")
-    logger.info("  Docs:  http://localhost:8000/docs")
+    logger.info("Starting API server on http://0.0.0.0:%d", args.api_port)
+    logger.info("  Docs:  http://localhost:%d/docs", args.api_port)
     logger.info("=" * 60)
 
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=args.api_port, log_level="warning", access_log=False)
 
 
 if __name__ == "__main__":
