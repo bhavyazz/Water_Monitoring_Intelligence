@@ -7,7 +7,11 @@ Simulates an Arduino equipped with water quality sensors:
   - Turbidity sensor (1–5 NTU)
   - Ultrasonic water level sensor (0–500 mm)
   - GPS module (slight random walk around a base coordinate)
-  - Nitrate strip color sensor (RGB values)
+  - TCS34725 color sensor (RGB values from pH / nitrate indicator strips)
+
+The TCS34725 output alternates between pH indicator strip and nitrate
+(Griess reaction) strip readings in the main pipeline.  Simulated RGB
+values evolve via random walk within the typical TCS34725 output range.
 
 Output format (one line every ~2 seconds):
   T:28.5;TDS:320;TURB:2.1;LEVEL:380;LAT:12.971234;LON:77.594321;RGB:120,98,76
@@ -17,6 +21,7 @@ import random
 import time
 import math
 from typing import Generator
+from utils.location_provider import LocationProvider
 
 
 class DataSimulator:
@@ -27,16 +32,17 @@ class DataSimulator:
     smoothing / ML behaves realistically.
     """
 
-    # ── Base GPS location (Bangalore, India) ──────────────────────────
-    BASE_LAT = 12.9716
-    BASE_LON = 77.5946
-
     def __init__(self, seed: int | None = None):
         """
         Args:
             seed: Optional RNG seed for reproducible simulations.
         """
         self.rng = random.Random(seed)
+
+        # Retrieve configurable active location
+        base_lat, base_lon = LocationProvider.get_active_location()
+        self.BASE_LAT = base_lat
+        self.BASE_LON = base_lon
 
         # Internal state — values evolve smoothly via random walk
         self._temp = 27.0       # °C
@@ -46,10 +52,11 @@ class DataSimulator:
         self._lat = self.BASE_LAT
         self._lon = self.BASE_LON
 
-        # Nitrate-strip RGB baseline (greenish tint = moderate nitrate)
-        self._r = 120
-        self._g = 100
-        self._b = 80
+        # TCS34725 color sensor RGB baseline
+        # Simulates the raw sensor output for indicator strip readings
+        self._tcs_r = 120
+        self._tcs_g = 100
+        self._tcs_b = 80
 
     # ── Private helpers ───────────────────────────────────────────────
 
@@ -77,6 +84,16 @@ class DataSimulator:
             Formatted string, e.g.
             ``T:28.5;TDS:320;TURB:2.1;LEVEL:380;LAT:12.971234;LON:77.594321;RGB:120,98,76``
         """
+        # Check for dynamic active location updates from the provider
+        base_lat, base_lon = LocationProvider.get_active_location()
+        if base_lat != self.BASE_LAT or base_lon != self.BASE_LON:
+            lat_offset = self._lat - self.BASE_LAT
+            lon_offset = self._lon - self.BASE_LON
+            self.BASE_LAT = base_lat
+            self.BASE_LON = base_lon
+            self._lat = self.BASE_LAT + lat_offset
+            self._lon = self.BASE_LON + lon_offset
+
         # Evolve each sensor value via a bounded random walk
         self._temp  = self._walk(self._temp,  0.5, 20.0, 35.0)
         self._tds   = self._walk(self._tds,   25.0, 200.0, 1000.0)
@@ -87,10 +104,11 @@ class DataSimulator:
         self._lat = self._walk(self._lat, 0.0001, self.BASE_LAT - 0.01, self.BASE_LAT + 0.01)
         self._lon = self._walk(self._lon, 0.0001, self.BASE_LON - 0.01, self.BASE_LON + 0.01)
 
-        # RGB: simulate nitrate-strip colour shifts
-        self._r = int(self._walk(self._r, 5, 50, 220))
-        self._g = int(self._walk(self._g, 5, 40, 200))
-        self._b = int(self._walk(self._b, 5, 30, 180))
+        # TCS34725 color sensor: simulate indicator strip RGB shifts
+        # (emulates readings from pH or nitrate test strips held under the sensor)
+        self._tcs_r = int(self._walk(self._tcs_r, 5, 50, 220))
+        self._tcs_g = int(self._walk(self._tcs_g, 5, 40, 200))
+        self._tcs_b = int(self._walk(self._tcs_b, 5, 30, 180))
 
         return (
             f"T:{self._temp:.1f};"
@@ -99,7 +117,7 @@ class DataSimulator:
             f"LEVEL:{self._level:.0f};"
             f"LAT:{self._lat:.6f};"
             f"LON:{self._lon:.6f};"
-            f"RGB:{self._r},{self._g},{self._b}"
+            f"RGB:{self._tcs_r},{self._tcs_g},{self._tcs_b}"
         )
 
     def stream(self, interval: float = 2.0, count: int | None = None) -> Generator[str, None, None]:

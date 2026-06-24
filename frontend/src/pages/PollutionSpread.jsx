@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { MapContainer, TileLayer, Circle, CircleMarker, Polyline, Popup, useMap } from 'react-leaflet'
 import { fetchClusters, fetchHistory } from '../api'
+import { useActiveLocation } from '../locationProvider'
 import 'leaflet/dist/leaflet.css'
 
 /* Direction string to bearing degrees for arrow rendering */
@@ -29,7 +30,7 @@ function FitBounds({ positions }) {
   return null
 }
 
-const severityColor = (s) => s === 'HIGH' ? '#ff4444' : s === 'MODERATE' ? '#ffaa00' : '#44cc66'
+const severityColor = (s) => s === 'HIGH' ? '#ff4455' : s === 'MODERATE' ? '#ffaa00' : '#44cc66'
 
 export default function PollutionSpread() {
   const [data, setData] = useState(null)
@@ -56,7 +57,9 @@ export default function PollutionSpread() {
 
   const clusters = data?.clusters || []
   const positions = clusters.map(c => [c.center[0], c.center[1]])
-  const defaultCenter = [12.9716, 77.5946]
+  const latestGPS = readings.find(r => r.latitude && r.longitude)
+  const [baseLat, baseLon, locationSource] = useActiveLocation(latestGPS?.latitude, latestGPS?.longitude)
+  const defaultCenter = [baseLat, baseLon]
 
   const visibleReadings = playbackIdx !== null ? readings.slice(0, playbackIdx) : readings
 
@@ -75,7 +78,7 @@ export default function PollutionSpread() {
           <h2>Pollution Spread</h2>
           {playbackIdx !== null && <span className="live-indicator"><span className="live-dot" /> Replaying</span>}
         </div>
-        <p>Track cluster movement direction and speed over time</p>
+        <p>Track cluster movement direction and speed over time [Source: {locationSource}]</p>
       </div>
 
       <div className="filter-bar">
@@ -90,7 +93,7 @@ export default function PollutionSpread() {
       </div>
 
       <div className="map-container" style={{ height: 'calc(100vh - 240px)' }}>
-        <MapContainer center={defaultCenter} zoom={15} scrollWheelZoom style={{ height: '100%', width: '100%' }}>
+        <MapContainer key={`${baseLat}-${baseLon}`} center={defaultCenter} zoom={15} scrollWheelZoom style={{ height: '100%', width: '100%' }}>
           <TileLayer
             attribution='&copy; OSM &copy; CARTO'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"

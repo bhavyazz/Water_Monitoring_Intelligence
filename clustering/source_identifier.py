@@ -58,6 +58,11 @@ class SourceIdentifier:
         self._cache: dict = {}  # (rounded_lat, rounded_lon) → source label
         self._fail_count: int = 0  # consecutive failures
 
+    def clear_cache(self) -> None:
+        """Clear reverse geocoding caches."""
+        self._cache.clear()
+        self._fail_count = 0
+
     def _rate_limit(self) -> None:
         """Enforce Nominatim's 1-request-per-second policy."""
         elapsed = time.time() - self._last_call

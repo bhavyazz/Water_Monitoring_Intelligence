@@ -4,19 +4,23 @@
 
 ```mermaid
 flowchart LR
-    A[Arduino Simulator] -->|Raw String| B[Parser]
+    A[Arduino / Simulator] -->|Raw String| B[Parser]
     B -->|WaterReading| C[Preprocessor]
-    C -->|Smoothed Data| D[ML Models]
-    D -->|Predictions| E[Storage]
-    E --> F[DBSCAN Clustering]
-    F --> G[Source Identifier]
-    F --> H[Spread Analyzer]
-    F --> I[Bloom Predictor]
-    G --> J[FastAPI Server]
-    H --> J
-    I --> J
-    E --> J
-    J -->|REST API| K[React Frontend]
+    C -->|Smoothed +\nTCS34725 RGB| D{Sensor Mode?}
+    D -->|Nitrate Strip| E["Nitrate Estimator\n(Calibration Table)"]
+    D -->|pH Strip| F["pH Estimator\n(Hue Conversion)"]
+    E -->|ppm| G[Quality Classifier]
+    F -->|pH| G
+    G -->|Predictions| H[Storage]
+    H --> I[DBSCAN Clustering]
+    I --> J[Source Identifier]
+    I --> K[Spread Analyzer]
+    I --> L[Bloom Predictor]
+    J --> M[FastAPI Server]
+    K --> M
+    L --> M
+    H --> M
+    M -->|REST API| N[React Frontend]
 ```
 
 ---
@@ -39,10 +43,19 @@ flowchart LR
 - Configurable window size (default 5 readings)
 - RGB normalization to [0,1] range for ML model input
 
-### 4. Nitrate Predictor (`models/nitrate_model.py`)
-- **RandomForestRegressor** trained on 2000 synthetic colorimetric samples
-- Maps RGB strip color values to nitrate concentration (ppm)
-- Simulates how real nitrate test strips work — darker green = higher nitrate
+### 4. Nitrate Calibration Estimator (`models/nitrate_model.py`)
+- **RandomForestRegressor** trained on 2000 synthetic TCS34725 readings
+- Pipeline: `TCS34725 RGB → Calibration Table Matching → Interpolation → Nitrate (ppm)`
+- Calibration table derived from real Griess reaction photochemistry (18 reference points)
+- Maps TCS34725 color sensor readings to nitrate concentration via learned calibration surface
+- Includes `_find_nearest_calibration_point()` for diagnostic calibration region identification
+
+### 4b. pH Colorimetric Estimator (`models/ph_model.py`)
+- **RandomForestRegressor** trained on 2000 synthetic TCS34725 readings with hue-augmented features
+- Pipeline: `TCS34725 RGB → Hue Conversion → Color Reference Mapping → pH Estimation`
+- Color reference table derived from Merck universal indicator + BTB (18 reference points)
+- Feature vector: `[R, G, B, Hue]` — the Hue channel encodes the indicator's color transition
+- Hue extraction via RGB→HSV conversion provides a near-monotonic mapping to pH
 
 ### 5. Water Quality Classifier (`models/quality_classifier.py`)
 - **RandomForestClassifier** trained on 3000 samples
@@ -84,8 +97,9 @@ flowchart LR
 | `/alerts` | GET | Quality and bloom alerts with severity badges |
 
 ### 11. Main Orchestrator (`main.py`)
-- Background thread runs the pipeline every 2 seconds
-- Flow: Simulate → Parse → Preprocess → Predict Nitrate → Classify Quality → Predict Bloom → Store → Cluster → Identify Source → Analyze Spread
+- Background thread runs the calibration-based sensing pipeline every 2 seconds
+- TCS34725 color sensor alternates: pH indicator strip (even minutes) ↔ Nitrate Griess strip (odd minutes)
+- Flow: Sensor → Parse → Preprocess (TCS34725 normalise + Hue extract) → Calibration Estimation → Classify Quality → Predict Bloom → Store → Cluster → Identify Source → Analyze Spread
 - Starts Uvicorn server on port 8000
 
 ---
@@ -288,6 +302,21 @@ flowchart LR
 - Color-coded alert items (quality warnings, bloom risks)
 - Severity badges
 - Auto-refresh every 5 seconds
+
+---
+
+## Configurable Location Source & GPS Fallback
+
+The system supports a configurable location source. When live GPS data is unavailable, the platform automatically falls back to predefined coordinates to ensure uninterrupted map visualization and location-based analysis.
+
+- **Location Source Priority**:
+  1. **GPS Coordinates** (when available and valid)
+  2. **Configured Demo Coordinates** (fallback, via `DEMO_LATITUDE` / `DEMO_LONGITUDE` environment variables on the backend, or `VITE_DEMO_LATITUDE` / `VITE_DEMO_LONGITUDE` on the frontend)
+  3. **Existing hardcoded values** (last resort, default to Bangalore center: `12.9716, 77.5946`)
+
+- **Centralized Providers**:
+  - **Backend**: `utils/location_provider.py` manages active coordinates dynamically for simulator drift and serial fallback coordinates.
+  - **Frontend**: `frontend/src/locationProvider.js` manages active coordinates for Leaflet maps, synthetic data offset calculations, and fallback cluster centers.
 
 ---
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Circle, Popup, useMap } from 'react-leaflet'
 import { fetchClusters } from '../api'
+import { useActiveLocation } from '../locationProvider'
 import 'leaflet/dist/leaflet.css'
 
 const SOURCE_COLORS = {
@@ -30,18 +31,19 @@ export default function PollutionSource() {
 
   const clusters = data?.clusters || []
   const positions = clusters.map(c => [c.center[0], c.center[1]])
-  const defaultCenter = [12.9716, 77.5946]
+  const [baseLat, baseLon, locationSource] = useActiveLocation()
+  const defaultCenter = [baseLat, baseLon]
 
   return (
     <div className="page-fade">
       <div className="page-header">
         <h2>Pollution Sources</h2>
-        <p>Identified contamination sources based on location and land use analysis</p>
+        <p>Identified contamination sources based on location and land use analysis [Source: {locationSource}]</p>
       </div>
 
       <div className="map-split">
         <div className="map-container">
-          <MapContainer center={defaultCenter} zoom={15} scrollWheelZoom style={{ height: '100%', width: '100%' }}>
+          <MapContainer key={`${baseLat}-${baseLon}`} center={defaultCenter} zoom={15} scrollWheelZoom style={{ height: '100%', width: '100%' }}>
             <TileLayer
               attribution='&copy; OSM &copy; CARTO'
               url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"

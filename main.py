@@ -3,14 +3,20 @@ main.py — System Entry Point
 
 Wires together every module and runs the complete pipeline:
 
-  Sensor Data → Parser → Preprocessing →
-  ML Models → Rule Engine → Storage → API
+  Sensor Data → Parser → TCS34725 Preprocessing →
+  Calibration-Based Estimation → Rule Engine → Storage → API
 
 Architecture:
   • A background thread runs the sensor-reading + pipeline loop.
   • The FastAPI server runs on the main thread (uvicorn).
   • All processed readings are stored in a shared StorageEngine.
   • API endpoints query the storage and run clustering on demand.
+
+Colorimetric Sensing Pipeline:
+  • Nitrate: TCS34725 RGB → Calibration Table Matching → Interpolation → ppm
+  • pH:     TCS34725 RGB → Hue Conversion → Color Reference Mapping → pH
+  • The TCS34725 sensor alternates between pH and nitrate indicator strips
+    (even/odd minute blocks) with carry-forward for continuous availability.
 
 Modes:
   • --simulate  (default)  Use the built-in DataSimulator.
@@ -36,8 +42,8 @@ from simulator.data_simulator import DataSimulator
 from simulator.arduino_serial import ArduinoSerialReader, list_serial_ports
 from parser.water_parser import WaterParser
 from preprocessing.preprocessor import Preprocessor
-from models.nitrate_model import NitratePredictor
-from models.ph_model import pHPredictor
+from models.nitrate_model import NitrateCalibrationEstimator
+from models.ph_model import PhColorimetricEstimator
 from models.quality_classifier import WaterQualityClassifier
 from clustering.bloom_predictor import BloomPredictor
 from clustering.hotspot_detector import HotspotDetector
@@ -64,31 +70,38 @@ def pipeline_loop(
     data_source,
     parser: WaterParser,
     preprocessor: Preprocessor,
-    nitrate_model: NitratePredictor,
-    ph_model: pHPredictor,
+    nitrate_estimator: NitrateCalibrationEstimator,
+    ph_estimator: PhColorimetricEstimator,
     quality_clf: WaterQualityClassifier,
     bloom_predictor: BloomPredictor,
     storage: StorageEngine,
     interval: float = 2.0,
 ) -> None:
     """
-    Infinite loop that:
-      1. Reads a sensor string (from simulator OR Arduino serial)
-      2. Parses it into a WaterReading
-      3. Smooths TDS / Turbidity
-      4. Predicts nitrate from RGB
-      5. Classifies water quality
-      6. Assesses algal bloom risk
-      7. Stores the enriched reading
+    Infinite loop implementing the calibration-based sensing pipeline:
+
+      1. Read raw sensor string (from simulator OR Arduino serial)
+      2. Parse into a WaterReading (extracts TCS34725 RGB among other fields)
+      3. Preprocess: smooth TDS/Turbidity, normalise TCS34725 RGB, extract Hue
+      4. Calibration-based estimation (alternating sensor mode):
+         • Nitrate mode: TCS34725 RGB → calibration table matching → ppm
+         • pH mode:      TCS34725 RGB → hue conversion → color mapping → pH
+      5. Classify water quality (uses estimated pH + other sensor values)
+      6. Assess algal bloom risk
+      7. Store the enriched reading
+
+    The TCS34725 sensor alternates between pH indicator strip (even minutes)
+    and nitrate Griess reaction strip (odd minutes).  Last-known values are
+    carried forward so downstream models always have both parameters.
 
     Runs in a daemon thread so it does not block the API server.
     """
     logger.info("Pipeline loop started (interval=%.1fs).", interval)
     start_time = time.time()
-    logger.info("Color sensor alternates: pH (even minutes) ↔ Nitrate (odd minutes).")
+    logger.info("TCS34725 alternates: pH strip (even minutes) ↔ Nitrate strip (odd minutes).")
 
     # Carry-forward buffers — so both pH and Nitrate are always available
-    # even though the sensor only measures one at a time.
+    # even though the TCS34725 only reads one strip at a time.
     last_known_nitrate: float | None = None
     last_known_ph: float | None = None
 
@@ -99,22 +112,25 @@ def pipeline_loop(
             logger.warning("Unparseable line — skipped.")
             continue
 
-        # ── Step 2: Preprocess (smooth + normalise) ────────────────
+        # ── Step 2: Preprocess (smooth TDS/Turb, normalise TCS34725 RGB,
+        #            extract Hue for pH estimation) ─────────────────
         preprocessor.process(reading)
 
-        # ── Step 3: Color sensor mode (alternates every 60 s) ──────
+        # ── Step 3: TCS34725 sensor mode (alternates every 60 s) ───
         elapsed = time.time() - start_time
         minute_block = int(elapsed // 60)
         sensor_mode = "pH" if minute_block % 2 == 0 else "Nitrate"
         reading.sensor_mode = sensor_mode
 
-        rgb_norm = getattr(reading, "_rgb_norm", None)
+        rgb_norm = getattr(reading, "_tcs34725_rgb_norm", None)
         if rgb_norm is not None:
             if sensor_mode == "Nitrate":
-                reading.nitrate = nitrate_model.predict(rgb_norm)
+                # Nitrate pipeline: TCS34725 RGB → calibration matching → ppm
+                reading.nitrate = nitrate_estimator.predict(rgb_norm)
                 last_known_nitrate = reading.nitrate
             else:
-                reading.ph = ph_model.predict(rgb_norm)
+                # pH pipeline: TCS34725 RGB → hue conversion → color mapping → pH
+                reading.ph = ph_estimator.predict(rgb_norm)
                 last_known_ph = reading.ph
 
         # ── Step 3b: Carry forward last known values ───────────────
@@ -217,6 +233,10 @@ def main() -> None:
     logger.info("  Water Quality Monitoring System — Starting Up")
     logger.info("=" * 60)
 
+    # ── Geolocation Startup Detection ─────────────────────────────────
+    from utils.location_provider import LocationProvider
+    LocationProvider.detect_device_location()
+
     # ── Choose data source ────────────────────────────────────────────
     if args.serial:
         # Auto-detect port if not specified
@@ -239,9 +259,9 @@ def main() -> None:
     parser = WaterParser()
     preprocessor = Preprocessor(window_size=5)
 
-    logger.info("Training ML models...")
-    nitrate_model = NitratePredictor(n_samples=2000)
-    ph_model = pHPredictor(n_samples=2000)
+    logger.info("Initialising calibration-based estimators...")
+    nitrate_estimator = NitrateCalibrationEstimator(n_samples=2000)
+    ph_estimator = PhColorimetricEstimator(n_samples=2000)
     quality_clf = WaterQualityClassifier(n_samples=3000)
     bloom_predictor = BloomPredictor()
 
@@ -254,7 +274,7 @@ def main() -> None:
     # ── Start background pipeline thread ──────────────────────────────
     pipeline_thread = threading.Thread(
         target=pipeline_loop,
-        args=(data_source, parser, preprocessor, nitrate_model, ph_model, quality_clf, bloom_predictor, storage),
+        args=(data_source, parser, preprocessor, nitrate_estimator, ph_estimator, quality_clf, bloom_predictor, storage),
         kwargs={"interval": args.interval},
         daemon=True,
         name="PipelineThread",

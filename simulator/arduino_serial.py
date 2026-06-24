@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import logging
 import re
+from utils.location_provider import LocationProvider
 import time
 from typing import Generator, Optional
 
@@ -242,7 +243,7 @@ class ArduinoSerialReader:
                 data["LON"] = m.group(1)
                 continue
 
-            # RGB
+            # TCS34725 color sensor RGB output
             m = self._PATTERNS["rgb"].search(line)
             if m:
                 data["RGB"] = f"{m.group(1)},{m.group(2)},{m.group(3)}"
@@ -251,12 +252,13 @@ class ArduinoSerialReader:
         if not data:
             return None
 
-        # ── Default GPS: RV College of Engineering, DJ Hostel ─────────
-        # If the Arduino's GPS module didn't get a fix, use this fallback.
+        # ── Centralized Config Location Fallback ─────────────────────
+        # If the Arduino's GPS module didn't get a fix, use centralized active location.
+        active_lat, active_lon = LocationProvider.get_active_location()
         if "LAT" not in data:
-            data["LAT"] = "12.923750"
+            data["LAT"] = f"{active_lat:.6f}"
         if "LON" not in data:
-            data["LON"] = "77.498700"
+            data["LON"] = f"{active_lon:.6f}"
 
         # Build canonical string in the expected order
         parts: list[str] = []

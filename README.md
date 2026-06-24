@@ -3,7 +3,7 @@
 A comprehensive IoT and ML-driven platform for real-time monitoring of river water quality, predictive algal bloom analysis, and pollution source identification. 
 
 ## Overview
-This system integrates a high-fidelity React dashboard with a fast Python/FastAPI backend. It simulates and analyzes water sensor data to detect anomalies, track pollution plumes, predict algal blooms using Verhulst logistic growth models, and identify likely pollution sources using DBSCAN clustering and OSM reverse geocoding.
+This system integrates a high-fidelity React dashboard with a fast Python/FastAPI backend. It simulates and analyzes water sensor data to detect anomalies, track pollution plumes, predict algal blooms using Verhulst logistic growth models, estimate nitrate and pH using calibration-based TCS34725 colorimetric sensing, and identify likely pollution sources using DBSCAN clustering and OSM reverse geocoding.
 
 ### Key Features
 * **Real-time Monitoring:** Live tracking of TDS, Turbidity, Nitrate, and Temperature with severity gauges.

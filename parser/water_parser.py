@@ -32,15 +32,15 @@ class WaterReading:
     level: Optional[float] = None         # mm  (water level)
     latitude: Optional[float] = None      # decimal degrees
     longitude: Optional[float] = None     # decimal degrees
-    rgb: Optional[Tuple[int, int, int]] = None  # (R, G, B)
+    rgb: Optional[Tuple[int, int, int]] = None  # TCS34725 raw sensor reading (R, G, B)
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     # ── Enriched fields (filled by downstream stages) ─────────────
-    nitrate: Optional[float] = None       # ppm  (predicted)
-    ph: Optional[float] = None            # pH value (predicted from colorimetric biosensor)
+    nitrate: Optional[float] = None       # ppm  (estimated via TCS34725 calibration)
+    ph: Optional[float] = None            # pH value (estimated via TCS34725 colorimetric sensing)
     quality_label: Optional[str] = None   # Safe / Moderate / Unsafe
     bloom_risk: Optional[str] = None      # LOW / MODERATE / HIGH
-    sensor_mode: Optional[str] = None     # "pH" or "Nitrate" — current color sensor mapping
+    sensor_mode: Optional[str] = None     # "pH" or "Nitrate" — which calibration table is active
 
     def to_dict(self) -> dict:
         """Serialise to a JSON-friendly dictionary."""

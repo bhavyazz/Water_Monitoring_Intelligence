@@ -9,9 +9,12 @@ Endpoints:
 """
 
 from __future__ import annotations
+import logging
 from typing import List, Dict, Any
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+
+logger = logging.getLogger("server")
 
 
 def create_app(storage, detector, source_id, spread_analyzer, geojson_builder) -> FastAPI:
@@ -132,5 +135,34 @@ def create_app(storage, detector, source_id, spread_analyzer, geojson_builder) -
             "alert_count": len(alerts),
             "alerts": alerts,
         }
+
+    # ── POST /location — Update active location coordinates ──────────
+
+    @app.post("/location", summary="Update active location coordinates")
+    def post_location(payload: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            lat = float(payload.get("latitude"))
+            lon = float(payload.get("longitude"))
+            source = str(payload.get("source", "API Client"))
+            if -90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0:
+                from utils.location_provider import LocationProvider
+                prev_lat, prev_lon = LocationProvider.get_active_location()
+                
+                # Update location
+                LocationProvider.update_location(lat, lon, source)
+                
+                # Check if change is significant (e.g. > 0.0002 degrees, about ~20 meters)
+                import math
+                delta = math.sqrt((lat - prev_lat)**2 + (lon - prev_lon)**2)
+                if delta > 0.0002:
+                    logger.info("Significant location change detected (delta=%.6f). Clearing history and caches.", delta)
+                    storage.clear()
+                    source_id.clear_cache()
+                    
+                return {"status": "ok", "message": f"Updated location to ({lat}, {lon}) via {source}"}
+            else:
+                return {"status": "error", "message": "Invalid coordinate ranges"}
+        except (ValueError, TypeError) as e:
+            return {"status": "error", "message": str(e)}
 
     return app

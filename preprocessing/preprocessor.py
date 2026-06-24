@@ -1,16 +1,20 @@
 """
-preprocessor.py — Signal Smoothing & Normalisation
+preprocessor.py — TCS34725 Signal Conditioning & Feature Extraction
 
 Applies a **moving-average filter** to noisy TDS and Turbidity streams,
-and optionally normalises RGB values to [0, 1] for ML consumption.
+normalises TCS34725 RGB values to [0, 1], and extracts the Hue component
+for pH colorimetric estimation.
 
 Design notes:
   • The preprocessor is stateful — it keeps an internal sliding window
     per channel so it can be fed readings one at a time.
   • Window size is configurable (default 5).
+  • TCS34725 outputs are normalised and hue-extracted here so that
+    downstream estimators receive ready-to-use feature vectors.
 """
 
 from __future__ import annotations
+import colorsys
 from collections import deque
 from typing import Optional, Tuple
 from parser.water_parser import WaterReading
@@ -19,7 +23,8 @@ from parser.water_parser import WaterReading
 class Preprocessor:
     """
     Stateful preprocessor that smooths TDS / Turbidity readings via
-    a simple moving average and normalises RGB values.
+    a simple moving average, normalises TCS34725 RGB values, and
+    extracts the Hue component for colorimetric pH estimation.
     """
 
     def __init__(self, window_size: int = 5):
@@ -41,22 +46,50 @@ class Preprocessor:
         return sum(window) / len(window)
 
     @staticmethod
-    def normalize_rgb(rgb: Tuple[int, int, int]) -> Tuple[float, float, float]:
+    def normalize_tcs34725_reading(
+        rgb: Tuple[int, int, int],
+    ) -> Tuple[float, float, float]:
         """
-        Normalise an (R, G, B) tuple from [0, 255] → [0.0, 1.0].
+        Normalise a raw TCS34725 (R, G, B) reading from [0, 255] → [0.0, 1.0].
 
-        This is the expected input range for the nitrate-prediction model.
+        This is the first step in the calibration-based sensing pipeline:
+        the raw 8-bit sensor output is scaled to the unit interval expected
+        by the nitrate and pH estimator models.
         """
         return (rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0)
+
+    @staticmethod
+    def extract_hue(r_norm: float, g_norm: float, b_norm: float) -> float:
+        """
+        Extract the Hue component from normalised RGB [0, 1] values.
+
+        Converts RGB → HSV using the standard algorithm and returns the
+        Hue angle in degrees [0, 360). This is used as an additional
+        feature for pH colorimetric estimation, where the Hue encodes
+        the indicator strip's acid→neutral→base color transition as a
+        near-monotonic scalar.
+
+        Args:
+            r_norm, g_norm, b_norm: TCS34725 RGB values normalised to [0, 1].
+
+        Returns:
+            Hue angle in degrees [0, 360).
+        """
+        h, _s, _v = colorsys.rgb_to_hsv(r_norm, g_norm, b_norm)
+        return h * 360.0
 
     # ── Public API ────────────────────────────────────────────────────
 
     def process(self, reading: WaterReading) -> WaterReading:
         """
-        Smooth TDS / Turbidity and normalise RGB in-place.
+        Smooth TDS / Turbidity, normalise TCS34725 RGB, and extract Hue.
 
         The original ``WaterReading`` object is mutated and returned
         for convenience (no copy is made).
+
+        After processing, the reading carries two temporary attributes:
+          - ``_tcs34725_rgb_norm``: (R, G, B) in [0, 1]
+          - ``_tcs34725_hue``: Hue angle in degrees [0, 360)
 
         Args:
             reading: A freshly parsed ``WaterReading``.
@@ -74,11 +107,16 @@ class Preprocessor:
             self._turb_window.append(reading.turbidity)
             reading.turbidity = round(self._moving_avg(self._turb_window), 2)
 
-        # ── Normalise RGB (store normalised version back) ─────────────
+        # ── Normalise TCS34725 RGB & extract Hue ──────────────────────
         # We keep the original integer RGB for display and store the
-        # normalised version in a temporary attribute for ML inference.
+        # normalised version + hue in temporary attributes for the
+        # calibration-based estimators.
         if reading.rgb is not None:
-            reading._rgb_norm = self.normalize_rgb(reading.rgb)  # type: ignore[attr-defined]
+            rgb_norm = self.normalize_tcs34725_reading(reading.rgb)
+            reading._tcs34725_rgb_norm = rgb_norm       # type: ignore[attr-defined]
+            reading._tcs34725_hue = self.extract_hue(   # type: ignore[attr-defined]
+                *rgb_norm
+            )
 
         return reading
 
@@ -103,4 +141,8 @@ if __name__ == "__main__":
         reading = WaterParser.parse(line)
         if reading:
             pp.process(reading)
-            print(f"Smoothed TDS={reading.tds}, Turb={reading.turbidity}")
+            rgb_n = getattr(reading, "_tcs34725_rgb_norm", None)
+            hue = getattr(reading, "_tcs34725_hue", None)
+            print(f"Smoothed TDS={reading.tds}, Turb={reading.turbidity}, "
+                  f"RGB_norm={rgb_n}, Hue={hue:.1f}°" if hue else
+                  f"Smoothed TDS={reading.tds}, Turb={reading.turbidity}")

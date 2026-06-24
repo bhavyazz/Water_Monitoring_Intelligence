@@ -39,3 +39,9 @@ class StorageEngine:
     def count(self) -> int:
         with self._lock:
             return len(self._buf)
+
+    def clear(self) -> None:
+        """Clear all stored readings."""
+        with self._lock:
+            self._buf.clear()
+

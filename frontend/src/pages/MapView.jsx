@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Circle, Popup, useMap } from 'react-leaflet'
 import { fetchClusters, fetchHistory } from '../api'
+import { useActiveLocation } from '../locationProvider'
 import 'leaflet/dist/leaflet.css'
 
 /* Auto-fit map bounds when data changes */
@@ -33,7 +34,9 @@ export default function MapView() {
     .filter(r => r.latitude && r.longitude)
     .map(r => [r.latitude, r.longitude])
 
-  const defaultCenter = [12.9716, 77.5946]
+  const latestGPS = readings.find(r => r.latitude && r.longitude)
+  const [baseLat, baseLon, locationSource] = useActiveLocation(latestGPS?.latitude, latestGPS?.longitude)
+  const defaultCenter = [baseLat, baseLon]
 
   const severityColor = (sev) => {
     if (sev === 'HIGH') return '#ff4444'
@@ -45,11 +48,12 @@ export default function MapView() {
     <>
       <div className="page-header">
         <h2>Map</h2>
-        <p>Sensor locations and pollution hotspot clusters</p>
+        <p>Sensor locations and pollution hotspot clusters [Source: {locationSource}]</p>
       </div>
 
       <div className="map-container">
         <MapContainer
+          key={`${baseLat}-${baseLon}`}
           center={defaultCenter}
           zoom={15}
           scrollWheelZoom={true}

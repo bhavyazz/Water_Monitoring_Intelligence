@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, Circle, CircleMarker, Polyline, Popup, useMap } from 'react-leaflet'
 import { fetchClusters, fetchHistory } from '../api'
 import { SOURCES, RIVER_PATH, SENSOR_POINTS } from '../data/syntheticData'
+import { useActiveLocation } from '../locationProvider'
 import 'leaflet/dist/leaflet.css'
 
 /* ── Constants ────────────────────────────────────────────────── */
@@ -52,6 +53,10 @@ export default function SpreadTracker() {
   const [clusters, setClusters] = useState([])
   const [readings, setReadings] = useState([])
   const [selectedCluster, setSelectedCluster] = useState(null)
+
+  const latestGPS = readings.find(r => r.latitude && r.longitude)
+  const [baseLat, baseLon, locationSource] = useActiveLocation(latestGPS?.latitude, latestGPS?.longitude)
+  const defaultCenter = [baseLat, baseLon]
 
   // Simulation state
   const [hour, setHour] = useState(0)
@@ -139,7 +144,7 @@ export default function SpreadTracker() {
     <div className="page-fade">
       <div className="page-header">
         <h2>Spread Tracker</h2>
-        <p>Real-time pollution movement tracking and time-lapse spread simulation</p>
+        <p>Real-time pollution movement tracking and time-lapse spread simulation [Source: {locationSource}]</p>
       </div>
 
       {/* Tab bar */}
@@ -155,7 +160,7 @@ export default function SpreadTracker() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 16, height: 'calc(100vh - 280px)' }}>
             {/* Leaflet map */}
             <div className="map-container" style={{ height: '100%' }}>
-              <MapContainer center={[12.9716, 77.5946]} zoom={15} scrollWheelZoom style={{ height: '100%', width: '100%' }}>
+              <MapContainer key={`${baseLat}-${baseLon}`} center={defaultCenter} zoom={15} scrollWheelZoom style={{ height: '100%', width: '100%' }}>
                 <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO' />
                 {positions.length > 0 && <AutoFit positions={positions} />}
 

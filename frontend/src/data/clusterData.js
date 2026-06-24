@@ -1,22 +1,31 @@
 import { SOURCES, RIVER_PATH, SENSOR_POINTS } from './syntheticData'
+import { subscribeToLocation } from '../locationProvider'
 
 const SEV_C = { HIGH: '#ff4455', MODERATE: '#ffaa00', LOW: '#44cc66' }
 
-/* 4 fallback clusters when backend is unreachable */
+/* Base location variables that update reactively */
+let currentBaseLat = 12.9716;
+let currentBaseLon = 77.5946;
+
+/* 4 fallback clusters when backend is unreachable with relative offsets */
 export const FALLBACK_CLUSTERS = [
-  { cluster_id: 0, center: [12.9716, 77.5946], severity: 'HIGH', reading_count: 12, affected_radius: '180', spread_direction: 'South-East', spread_speed: '0.3 km/h', probable_source: 'Industrial Discharge', readings: [] },
-  { cluster_id: 1, center: [12.9725, 77.5938], severity: 'MODERATE', reading_count: 8, affected_radius: '120', spread_direction: 'East', spread_speed: '0.1 km/h', probable_source: 'Sewage Contamination', readings: [] },
-  { cluster_id: 2, center: [12.9700, 77.5955], severity: 'LOW', reading_count: 5, affected_radius: '90', spread_direction: 'North', spread_speed: '0.05 km/h', probable_source: 'Agricultural Runoff', readings: [] },
-  { cluster_id: 3, center: [12.9710, 77.5960], severity: 'MODERATE', reading_count: 7, affected_radius: '150', spread_direction: 'South', spread_speed: '0.2 km/h', probable_source: 'Unknown', readings: [] },
+  { cluster_id: 0, latOffset: 0.0, lonOffset: 0.0, center: [0, 0], severity: 'HIGH', reading_count: 12, affected_radius: '180', spread_direction: 'South-East', spread_speed: '0.3 km/h', probable_source: 'Industrial Discharge', readings: [] },
+  { cluster_id: 1, latOffset: 0.0009, lonOffset: -0.0008, center: [0, 0], severity: 'MODERATE', reading_count: 8, affected_radius: '120', spread_direction: 'East', spread_speed: '0.1 km/h', probable_source: 'Sewage Contamination', readings: [] },
+  { cluster_id: 2, latOffset: -0.0016, lonOffset: 0.0009, center: [0, 0], severity: 'LOW', reading_count: 5, affected_radius: '90', spread_direction: 'North', spread_speed: '0.05 km/h', probable_source: 'Agricultural Runoff', readings: [] },
+  { cluster_id: 3, latOffset: -0.0006, lonOffset: 0.0014, center: [0, 0], severity: 'MODERATE', reading_count: 7, affected_radius: '150', spread_direction: 'South', spread_speed: '0.2 km/h', probable_source: 'Unknown', readings: [] },
 ]
 
-/* Generate synthetic readings for fallback clusters */
+/* Generate synthetic readings with fixed spatial offsets relative to their cluster's dynamic center */
 FALLBACK_CLUSTERS.forEach(c => {
   for (let i = 0; i < c.reading_count; i++) {
     const sevMult = c.severity === 'HIGH' ? 1.5 : c.severity === 'MODERATE' ? 1 : 0.6
+    const rLatOffset = (Math.random() - 0.5) * 0.002
+    const rLonOffset = (Math.random() - 0.5) * 0.002
     c.readings.push({
-      latitude: c.center[0] + (Math.random() - 0.5) * 0.002,
-      longitude: c.center[1] + (Math.random() - 0.5) * 0.002,
+      latOffset: rLatOffset,
+      lonOffset: rLonOffset,
+      latitude: 0,
+      longitude: 0,
       tds: 300 + Math.random() * 400 * sevMult,
       turbidity: 1.5 + Math.random() * 2.5 * sevMult,
       nitrate: 8 + Math.random() * 20 * sevMult,
@@ -25,6 +34,20 @@ FALLBACK_CLUSTERS.forEach(c => {
     })
   }
 })
+
+// Subscribe to dynamic active coordinates
+subscribeToLocation((lat, lon) => {
+  currentBaseLat = lat;
+  currentBaseLon = lon;
+  
+  FALLBACK_CLUSTERS.forEach(c => {
+    c.center = [lat + c.latOffset, lon + c.lonOffset];
+    c.readings.forEach(r => {
+      r.latitude = c.center[0] + r.latOffset;
+      r.longitude = c.center[1] + r.lonOffset;
+    });
+  });
+});
 
 /* 72-hour cluster evolution data */
 export function genEvolution() {
@@ -75,9 +98,9 @@ export function genEvolution() {
 
 /* SVG coordinate mapping for cluster centroids */
 export function gpsToSvg(lat, lon) {
-  // Map GPS roughly to SVG 1100x400 space (Bangalore area)
-  const x = ((lon - 77.590) / 0.010) * 800 + 150
-  const y = ((12.975 - lat) / 0.008) * 300 + 50
+  // Map GPS roughly to SVG 1100x400 space (relative to current active coordinates)
+  const x = ((lon - (currentBaseLon - 0.0046)) / 0.010) * 800 + 150
+  const y = (((currentBaseLat + 0.0034) - lat) / 0.008) * 300 + 50
   return { x: Math.max(30, Math.min(1070, x)), y: Math.max(30, Math.min(370, y)) }
 }
 
