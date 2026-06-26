@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_aa787039ec184458c3ba335d43255f03 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+    <div style="position:fixed; bottom:30px; left:30px; z-index:1000;
+         background:white; padding:12px 16px; border-radius:8px;
+         box-shadow:0 2px 8px rgba(0,0,0,0.15); font-family:Arial; font-size:12px;">
+        <b>DBSCAN Hotspot Detection</b><br>
+        <b>eps=800m, min_samples=3</b><br><br>
+        <span style="color:#ef4444;">&#9679;</span> Cluster 0 (Industrial)<br>
+        <span style="color:#f97316;">&#9679;</span> Cluster 1 (Sewage)<br>
+        <span style="color:#eab308;">&#9679;</span> Cluster 2 (Agricultural)<br>
+        <span style="color:#22c55e;">&#9679;</span> Noise (reference points)<br>
+        <br>Dashed circles = affected radius<br>
+        <i>3 clusters, 5 noise points</i>
+    </div>
+    
+    
+            <div class="folium-map" id="map_aa787039ec184458c3ba335d43255f03" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_aa787039ec184458c3ba335d43255f03 = L.map(
+                "map_aa787039ec184458c3ba335d43255f03",
+                {
+                    center: [12.93288, 77.49890500000001],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 13,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_f9c1581271b5045599298bcb45b44f49 = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_f9c1581271b5045599298bcb45b44f49.addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            var tile_layer_2b4cf8f295286ca9d8d5f2b72eabff12 = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Esri World Imagery",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_2b4cf8f295286ca9d8d5f2b72eabff12.addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            var circle_7fb4555d09d88ab14f216c88b0a901ee = L.circle(
+                [12.95445, 77.51775],
+                {"bubblingMouseEvents": true, "color": "#ef4444", "dashArray": "5 5", "dashOffset": null, "fill": true, "fillColor": "#ef4444", "fillOpacity": 0.15, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 213.45000000000002, "stroke": true, "weight": 2}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_7fb4555d09d88ab14f216c88b0a901ee.bindTooltip(
+                `<div>
+                     Cluster 0: HIGH severity
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_e61c967478fa0c617633dca76f5c3213 = L.marker(
+                [12.95445, 77.51775],
+                {
+}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            var icon_fbe43ba61ccff1a9f075560f7edc2216 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "industry",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_e636fe4745e3c8b5abd85204be075034 = L.popup({
+  "maxWidth": 380,
+});
+
+        
+            
+                var html_b035b3f565d2d7b5073643339a063f19 = $(`<div id="html_b035b3f565d2d7b5073643339a063f19" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial; min-width:300px;">             <h3 style="margin:0 0 8px 0; color:#ef4444;">Hotspot Cluster 0</h3>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:3px 8px;"><b>Severity</b></td>                     <td><b style="color:#ef4444;">HIGH</b></td></tr>                 <tr style="background:#f8fafc;"><td style="padding:3px 8px;"><b>Source</b></td>                     <td>Industrial Discharge</td></tr>                 <tr><td style="padding:3px 8px;"><b>Confidence</b></td>                     <td>HIGH</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:3px 8px;"><b>Readings</b></td>                     <td>4 samples</td></tr>                 <tr><td style="padding:3px 8px;"><b>Radius</b></td>                     <td>142 m</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:3px 8px;"><b>Avg WQI</b></td>                     <td>58.6</td></tr>                 <tr><td style="padding:3px 8px;"><b>Avg TDS</b></td><td>1032 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:3px 8px;"><b>Avg pH</b></td>                     <td>5.9</td></tr>             </table>             <p style="margin:6px 0 2px 0;font-size:12px;"><b>Evidence:</b></p>             <ul style="margin:0;padding-left:16px;font-size:11px;"><li>High TDS (1032 ppm) indicates dissolved industrial chemicals</li><li>Acidic pH (5.9) suggests chemical/industrial waste</li><li>High turbidity (12.2 NTU) from suspended industrial solids</li></ul>         </div>         </div>`)[0];
+                popup_e636fe4745e3c8b5abd85204be075034.setContent(html_b035b3f565d2d7b5073643339a063f19);
+            
+        
+
+        marker_e61c967478fa0c617633dca76f5c3213.bindPopup(popup_e636fe4745e3c8b5abd85204be075034)
+        ;
+
+        
+    
+    
+            marker_e61c967478fa0c617633dca76f5c3213.bindTooltip(
+                `<div>
+                     Cluster 0: Industrial Discharge (HIGH)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_e61c967478fa0c617633dca76f5c3213.setIcon(icon_fbe43ba61ccff1a9f075560f7edc2216);
+            
+    
+            var circle_marker_84d5db72a9cac867756e9092f8344bd9 = L.circleMarker(
+                [12.9555, 77.5185],
+                {"bubblingMouseEvents": true, "color": "#ef4444", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ef4444", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_84d5db72a9cac867756e9092f8344bd9.bindTooltip(
+                `<div>
+                     WQI=60, TDS=1050, pH=5.8
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_4f2df71ef6b281ec239d6236c3a5cd1e = L.circleMarker(
+                [12.9548, 77.5175],
+                {"bubblingMouseEvents": true, "color": "#ef4444", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ef4444", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_4f2df71ef6b281ec239d6236c3a5cd1e.bindTooltip(
+                `<div>
+                     WQI=56, TDS=980, pH=6.0
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_2b250a2449f83f3efba8e8f670f5fba8 = L.circleMarker(
+                [12.954, 77.5178],
+                {"bubblingMouseEvents": true, "color": "#ef4444", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ef4444", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_2b250a2449f83f3efba8e8f670f5fba8.bindTooltip(
+                `<div>
+                     WQI=66, TDS=1180, pH=5.5
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_2464892dc278c24f7e8b7da719eaf1b5 = L.circleMarker(
+                [12.9535, 77.5172],
+                {"bubblingMouseEvents": true, "color": "#ef4444", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ef4444", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_2464892dc278c24f7e8b7da719eaf1b5.bindTooltip(
+                `<div>
+                     WQI=52, TDS=920, pH=6.2
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_b23821c9c916159d355d111f0bcc6818 = L.circle(
+                [12.925967, 77.500517],
+                {"bubblingMouseEvents": true, "color": "#f97316", "dashArray": "5 5", "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.15, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 497.09999999999997, "stroke": true, "weight": 2}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_b23821c9c916159d355d111f0bcc6818.bindTooltip(
+                `<div>
+                     Cluster 1: HIGH severity
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_40d3d5da1a51249f82043efcd5b79501 = L.marker(
+                [12.925967, 77.500517],
+                {
+}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            var icon_39a02d2a50445d6a134a238e8bc8ba73 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "home",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_f39bdb9b5124779cfa4b2d45c2ab81fb = L.popup({
+  "maxWidth": 380,
+});
+
+        
+            
+                var html_f46061ec754d1dfed9d8021a256ef627 = $(`<div id="html_f46061ec754d1dfed9d8021a256ef627" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial; min-width:300px;">             <h3 style="margin:0 0 8px 0; color:#f97316;">Hotspot Cluster 1</h3>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:3px 8px;"><b>Severity</b></td>                     <td><b style="color:#f97316;">HIGH</b></td></tr>                 <tr style="background:#f8fafc;"><td style="padding:3px 8px;"><b>Source</b></td>                     <td>Sewage Contamination</td></tr>                 <tr><td style="padding:3px 8px;"><b>Confidence</b></td>                     <td>HIGH</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:3px 8px;"><b>Readings</b></td>                     <td>6 samples</td></tr>                 <tr><td style="padding:3px 8px;"><b>Radius</b></td>                     <td>331 m</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:3px 8px;"><b>Avg WQI</b></td>                     <td>47.0</td></tr>                 <tr><td style="padding:3px 8px;"><b>Avg TDS</b></td><td>625 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:3px 8px;"><b>Avg pH</b></td>                     <td>8.0</td></tr>             </table>             <p style="margin:6px 0 2px 0;font-size:12px;"><b>Evidence:</b></p>             <ul style="margin:0;padding-left:16px;font-size:11px;"><li>Alkaline pH (8.0) consistent with organic decomposition</li><li>TDS (625 ppm) in typical sewage range</li><li>Elevated temperature (28.8°C) suggests warm sewage discharge</li></ul>         </div>         </div>`)[0];
+                popup_f39bdb9b5124779cfa4b2d45c2ab81fb.setContent(html_f46061ec754d1dfed9d8021a256ef627);
+            
+        
+
+        marker_40d3d5da1a51249f82043efcd5b79501.bindPopup(popup_f39bdb9b5124779cfa4b2d45c2ab81fb)
+        ;
+
+        
+    
+    
+            marker_40d3d5da1a51249f82043efcd5b79501.bindTooltip(
+                `<div>
+                     Cluster 1: Sewage Contamination (HIGH)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_40d3d5da1a51249f82043efcd5b79501.setIcon(icon_39a02d2a50445d6a134a238e8bc8ba73);
+            
+    
+            var circle_marker_f4185c1d273e25782251b9a4310e9422 = L.circleMarker(
+                [12.9245, 77.4995],
+                {"bubblingMouseEvents": true, "color": "#f97316", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_f4185c1d273e25782251b9a4310e9422.bindTooltip(
+                `<div>
+                     WQI=47, TDS=680, pH=7.8
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_4df0f0779ace70f2e04d7fa8633e5098 = L.circleMarker(
+                [12.9265, 77.5005],
+                {"bubblingMouseEvents": true, "color": "#f97316", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_4df0f0779ace70f2e04d7fa8633e5098.bindTooltip(
+                `<div>
+                     WQI=50, TDS=720, pH=8.0
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_94e83472bd82e40158a432a8b57c5dd4 = L.circleMarker(
+                [12.9235, 77.4988],
+                {"bubblingMouseEvents": true, "color": "#f97316", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_94e83472bd82e40158a432a8b57c5dd4.bindTooltip(
+                `<div>
+                     WQI=47, TDS=650, pH=7.9
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_8391ef381f20bf481f9235a508a946b8 = L.circleMarker(
+                [12.928, 77.502],
+                {"bubblingMouseEvents": true, "color": "#f97316", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_8391ef381f20bf481f9235a508a946b8.bindTooltip(
+                `<div>
+                     WQI=46, TDS=520, pH=8.2
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_d5a1473115647439b26eba1a6f38b49e = L.circleMarker(
+                [12.9275, 77.5015],
+                {"bubblingMouseEvents": true, "color": "#f97316", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_d5a1473115647439b26eba1a6f38b49e.bindTooltip(
+                `<div>
+                     WQI=45, TDS=480, pH=8.3
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_21d64b644a4a90ec233d84bb780cf6f9 = L.circleMarker(
+                [12.9258, 77.5008],
+                {"bubblingMouseEvents": true, "color": "#f97316", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_21d64b644a4a90ec233d84bb780cf6f9.bindTooltip(
+                `<div>
+                     WQI=47, TDS=700, pH=7.7
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_7209f1f29441d344f15f708859311667 = L.circle(
+                [12.9088, 77.4838],
+                {"bubblingMouseEvents": true, "color": "#eab308", "dashArray": "5 5", "dashOffset": null, "fill": true, "fillColor": "#eab308", "fillOpacity": 0.15, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 768.5999999999999, "stroke": true, "weight": 2}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_7209f1f29441d344f15f708859311667.bindTooltip(
+                `<div>
+                     Cluster 2: MODERATE severity
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_5e90d7edf5279b3a9e7d8f7ec0bb35e9 = L.marker(
+                [12.9088, 77.4838],
+                {
+}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            var icon_ca456caeaeeed34a5d58d92ae92b76bf = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "leaf",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_f0293ad9ebc1455877f3c530414531bc = L.popup({
+  "maxWidth": 380,
+});
+
+        
+            
+                var html_580c1fc28a366d4809d04c5b5400d979 = $(`<div id="html_580c1fc28a366d4809d04c5b5400d979" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial; min-width:300px;">             <h3 style="margin:0 0 8px 0; color:#eab308;">Hotspot Cluster 2</h3>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:3px 8px;"><b>Severity</b></td>                     <td><b style="color:#eab308;">MODERATE</b></td></tr>                 <tr style="background:#f8fafc;"><td style="padding:3px 8px;"><b>Source</b></td>                     <td>Agricultural Runoff</td></tr>                 <tr><td style="padding:3px 8px;"><b>Confidence</b></td>                     <td>HIGH</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:3px 8px;"><b>Readings</b></td>                     <td>5 samples</td></tr>                 <tr><td style="padding:3px 8px;"><b>Radius</b></td>                     <td>512 m</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:3px 8px;"><b>Avg WQI</b></td>                     <td>28.1</td></tr>                 <tr><td style="padding:3px 8px;"><b>Avg TDS</b></td><td>350 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:3px 8px;"><b>Avg pH</b></td>                     <td>7.4</td></tr>             </table>             <p style="margin:6px 0 2px 0;font-size:12px;"><b>Evidence:</b></p>             <ul style="margin:0;padding-left:16px;font-size:11px;"><li>Moderate TDS (350 ppm) from dissolved soil minerals</li><li>Turbidity (3.3 NTU) consistent with soil sediment runoff</li><li>Near-neutral pH (7.4) typical of agricultural drainage</li></ul>         </div>         </div>`)[0];
+                popup_f0293ad9ebc1455877f3c530414531bc.setContent(html_580c1fc28a366d4809d04c5b5400d979);
+            
+        
+
+        marker_5e90d7edf5279b3a9e7d8f7ec0bb35e9.bindPopup(popup_f0293ad9ebc1455877f3c530414531bc)
+        ;
+
+        
+    
+    
+            marker_5e90d7edf5279b3a9e7d8f7ec0bb35e9.bindTooltip(
+                `<div>
+                     Cluster 2: Agricultural Runoff (MODERATE)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_5e90d7edf5279b3a9e7d8f7ec0bb35e9.setIcon(icon_ca456caeaeeed34a5d58d92ae92b76bf);
+            
+    
+            var circle_marker_2a26949d499384327139ee2ffcbc3e3d = L.circleMarker(
+                [12.9125, 77.4855],
+                {"bubblingMouseEvents": true, "color": "#eab308", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#eab308", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_2a26949d499384327139ee2ffcbc3e3d.bindTooltip(
+                `<div>
+                     WQI=31, TDS=420, pH=7.3
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_3fc12a4b8220d85fb0ce7e9e9f71cf04 = L.circleMarker(
+                [12.9105, 77.4875],
+                {"bubblingMouseEvents": true, "color": "#eab308", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#eab308", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_3fc12a4b8220d85fb0ce7e9e9f71cf04.bindTooltip(
+                `<div>
+                     WQI=30, TDS=380, pH=7.5
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_3b5953710cf4b097dbbf908c55c1d1b6 = L.circleMarker(
+                [12.9055, 77.4805],
+                {"bubblingMouseEvents": true, "color": "#eab308", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#eab308", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_3b5953710cf4b097dbbf908c55c1d1b6.bindTooltip(
+                `<div>
+                     WQI=29, TDS=350, pH=7.2
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_67aee1da1c52fbbe016fa496fc2d923c = L.circleMarker(
+                [12.908, 77.483],
+                {"bubblingMouseEvents": true, "color": "#eab308", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#eab308", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_67aee1da1c52fbbe016fa496fc2d923c.bindTooltip(
+                `<div>
+                     WQI=25, TDS=310, pH=7.4
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_17e3c83a6c651481abf9afb3ba086ba5 = L.circleMarker(
+                [12.9075, 77.4825],
+                {"bubblingMouseEvents": true, "color": "#eab308", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#eab308", "fillOpacity": 0.6, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_17e3c83a6c651481abf9afb3ba086ba5.bindTooltip(
+                `<div>
+                     WQI=25, TDS=290, pH=7.6
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_b98dc101d44c9236ffbb81a4e88592b8 = L.circleMarker(
+                [12.9455, 77.5105],
+                {"bubblingMouseEvents": true, "color": "#22c55e", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_b98dc101d44c9236ffbb81a4e88592b8.bindTooltip(
+                `<div>
+                     Noise (not clustered): WQI=50
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_919a8a40875b09ac6a22d49bb98e5ffd = L.circleMarker(
+                [12.9445, 77.5095],
+                {"bubblingMouseEvents": true, "color": "#22c55e", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_919a8a40875b09ac6a22d49bb98e5ffd.bindTooltip(
+                `<div>
+                     Noise (not clustered): WQI=47
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_d64da83b5f39fcc30ed11ab4eddb5c5d = L.circleMarker(
+                [12.97, 77.535],
+                {"bubblingMouseEvents": true, "color": "#22c55e", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_d64da83b5f39fcc30ed11ab4eddb5c5d.bindTooltip(
+                `<div>
+                     Noise (not clustered): WQI=12
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_a12102795c2c134b527f1a9996411af4 = L.circleMarker(
+                [12.93, 77.46],
+                {"bubblingMouseEvents": true, "color": "#22c55e", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_a12102795c2c134b527f1a9996411af4.bindTooltip(
+                `<div>
+                     Noise (not clustered): WQI=14
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_9232aaa472e767182908e470d67316bc = L.circleMarker(
+                [12.95, 77.47],
+                {"bubblingMouseEvents": true, "color": "#22c55e", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 1}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+        
+    
+            circle_marker_9232aaa472e767182908e470d67316bc.bindTooltip(
+                `<div>
+                     Noise (not clustered): WQI=10
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var layer_control_07163414b23834a5c726fc31612c18c3_layers = {
+                base_layers : {
+                    "openstreetmap" : tile_layer_f9c1581271b5045599298bcb45b44f49,
+                    "Satellite View" : tile_layer_2b4cf8f295286ca9d8d5f2b72eabff12,
+                },
+                overlays :  {
+                },
+            };
+            let layer_control_07163414b23834a5c726fc31612c18c3 = L.control.layers(
+                layer_control_07163414b23834a5c726fc31612c18c3_layers.base_layers,
+                layer_control_07163414b23834a5c726fc31612c18c3_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": true,
+  "autoZIndex": true,
+}
+            ).addTo(map_aa787039ec184458c3ba335d43255f03);
+
+        
+</script>
+</html>

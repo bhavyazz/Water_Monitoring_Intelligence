@@ -40,7 +40,7 @@ function Ring({ value, max, color, size = 56 }) {
   const pct = Math.min(1, value / max)
   return (
     <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#151a28" strokeWidth="4" />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e0e0e0" strokeWidth="4" />
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth="4"
         strokeDasharray={`${pct * circ} ${circ}`} strokeLinecap="round"
         style={{ transition: 'stroke-dasharray 0.8s ease' }} />
@@ -58,11 +58,11 @@ function PipelineViz() {
   const dotPos = (tick % 60) / 60
 
   return (
-    <div style={{ background: '#0d1117', border: '1px solid #1a1a2e', borderRadius: 12, padding: 20, marginBottom: 20 }}>
+    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, marginBottom: 20 }}>
       <div style={{ fontSize: 10, color: '#333', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 14 }}>Data Pipeline — Live</div>
       <svg viewBox="0 0 700 50" style={{ width: '100%', height: 50 }}>
         {/* Pipeline line */}
-        <line x1="30" y1="25" x2="670" y2="25" stroke="#151a28" strokeWidth="2" />
+        <line x1="30" y1="25" x2="670" y2="25" stroke="#e0e0e0" strokeWidth="2" />
 
         {/* Animated data dots flowing through pipeline */}
         {[0, 0.15, 0.35, 0.55, 0.75].map((offset, i) => {
@@ -78,7 +78,7 @@ function PipelineViz() {
           const isActive = Math.abs(dotPos - i / (stages.length - 1)) < 0.1
           return (
             <g key={s}>
-              <circle cx={x} cy={25} r={isActive ? 8 : 6} fill={isActive ? stageColors[i] : '#0d1117'}
+              <circle cx={x} cy={25} r={isActive ? 8 : 6} fill={isActive ? stageColors[i] : 'var(--bg-card)'}
                 stroke={stageColors[i]} strokeWidth={isActive ? 2 : 1.5}
                 style={{ transition: 'all 0.2s ease' }} />
               <text x={x} y={46} textAnchor="middle" fill="#444" fontSize="8" fontFamily="Inter">{s}</text>
@@ -114,16 +114,16 @@ export default function Dashboard() {
   const r = latest?.reading || {}
   const tds = useAnimatedValue(r.tds || 0)
   const turb = useAnimatedValue(r.turbidity || 0)
-  const nitrate = useAnimatedValue(r.nitrate || 0)
+  const wqi = useAnimatedValue(r.contamination_score || 0)
   const ph = useAnimatedValue(r.ph || 0)
   const temp = useAnimatedValue(r.temperature || 0)
   const level = useAnimatedValue(r.level || 0)
   const sensorMode = r.sensor_mode || '--'
 
-  const healthScore = Math.round(Math.max(0, Math.min(100, 100 - tds / 10 - turb * 10 - nitrate * 1.5)))
+  const healthScore = Math.round(Math.max(0, Math.min(100, 100 - (r.contamination_score || 0))))
   const healthColor = healthScore > 70 ? '#44cc66' : healthScore > 40 ? '#ffaa00' : '#ff4455'
 
-  const sparkData = history.map(h => ({ tds: h.tds, turb: h.turbidity, nit: h.nitrate, ph: h.ph, temp: h.temperature }))
+  const sparkData = history.map(h => ({ tds: h.tds, turb: h.turbidity, wqi: h.contamination_score || 0, ph: h.ph, temp: h.temperature }))
 
   const formatUptime = () => {
     const h = Math.floor(uptime / 3600), m = Math.floor((uptime % 3600) / 60), s = uptime % 60
@@ -148,41 +148,41 @@ export default function Dashboard() {
       {/* Pipeline visualization */}
       <PipelineViz />
 
-      {/* Sensor Mode Indicator */}
-      <div style={{ background: '#0d1117', border: `1px solid ${sensorMode === 'pH' ? '#6c5ce7' : '#ffaa00'}40`, borderRadius: 10, padding: '8px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, transition: 'border-color 0.5s' }}>
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: sensorMode === 'pH' ? '#6c5ce7' : '#ffaa00', animation: 'highPulse 1.5s infinite' }} />
-        <span style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: 0.5 }}>Color Sensor:</span>
-        <span style={{ fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-mono)', color: sensorMode === 'pH' ? '#6c5ce7' : '#ffaa00' }}>
-          {sensorMode === 'pH' ? 'pH Mode' : sensorMode === 'Nitrate' ? 'Nitrate Mode' : '--'}
+      {/* Color sensor: colorimetric pH from RGB strip */}
+      <div style={{ background: 'var(--bg-card)', border: '1px solid #6c5ce740', borderRadius: 10, padding: '8px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#6c5ce7', animation: 'highPulse 1.5s infinite' }} />
+        <span style={{ fontSize: 10, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Color Sensor:</span>
+        <span style={{ fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-mono)', color: '#6c5ce7' }}>
+          pH (colorimetric, RGB → pH model)
         </span>
       </div>
 
       {/* Health Score + Key Metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 16, marginBottom: 20 }}>
         {/* Health ring */}
-        <div style={{ background: '#0d1117', border: '1px solid #1a1a2e', borderRadius: 12, padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ position: 'relative' }}>
             <Ring value={healthScore} max={100} color={healthColor} size={90} />
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-mono)', color: healthColor }}>{healthScore}</span>
             </div>
           </div>
-          <div style={{ fontSize: 10, color: '#444', marginTop: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>Water Health</div>
+          <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>Water Health</div>
         </div>
 
         {/* Metric cards with sparklines */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
           {[
             { label: 'TDS', value: tds, unit: 'ppm', fmt: 0, key: 'tds', color: '#f0f0f0', max: 1000 },
-            { label: 'Turbidity', value: turb, unit: 'NTU', fmt: 2, key: 'turb', color: '#888', max: 5 },
-            { label: 'Nitrate', value: nitrate, unit: 'ppm', fmt: 2, key: 'nit', color: sensorMode === 'Nitrate' ? '#ffaa00' : '#333', max: 50 },
+            { label: 'Turbidity', value: turb, unit: 'NTU', fmt: 2, key: 'turb', color: 'var(--text-muted)', max: 5 },
+            { label: 'WQI', value: wqi, unit: 'score', fmt: 1, key: 'wqi', color: wqi >= 60 ? '#ff4455' : wqi >= 30 ? '#ffaa00' : '#44cc66', max: 100 },
             { label: 'pH', value: ph, unit: 'pH', fmt: 2, key: 'ph', color: sensorMode === 'pH' ? '#6c5ce7' : '#333', max: 14 },
-            { label: 'Temperature', value: temp, unit: 'C', fmt: 1, key: 'temp', color: '#44cc66', max: 35 },
+            { label: 'Temperature', value: temp, unit: '°C', fmt: 1, key: 'temp', color: '#44cc66', max: 35 },
           ].map(m => (
-            <div key={m.label} style={{ background: '#0d1117', border: '1px solid #1a1a2e', borderRadius: 10, padding: '14px 16px', display: 'flex', flexDirection: 'column' }}>
+            <div key={m.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px', display: 'flex', flexDirection: 'column' }}>
               <div style={{ fontSize: 10, color: '#333', textTransform: 'uppercase', letterSpacing: 0.5 }}>{m.label}</div>
               <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--font-mono)', color: m.color, margin: '4px 0' }}>
-                {m.value.toFixed(m.fmt)}<span style={{ fontSize: 11, fontWeight: 400, color: '#444', marginLeft: 3 }}>{m.unit}</span>
+                {m.value.toFixed(m.fmt)}<span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-secondary)', marginLeft: 3 }}>{m.unit}</span>
               </div>
               <div style={{ marginTop: 'auto', opacity: 0.6 }}>
                 <Sparkline data={sparkData} dataKey={m.key} color={m.color} height={30} />
@@ -194,38 +194,38 @@ export default function Dashboard() {
 
       {/* Bottom row: Level + Quality + Bloom + Alerts + Clusters */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
-        <div style={{ background: '#0d1117', border: '1px solid #1a1a2e', borderRadius: 10, padding: '14px 16px' }}>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
           <div style={{ fontSize: 10, color: '#333', textTransform: 'uppercase', letterSpacing: 0.5 }}>Water Level</div>
           <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#2090b0', marginTop: 6 }}>
-            {level.toFixed(0)}<span style={{ fontSize: 11, fontWeight: 400, color: '#444', marginLeft: 3 }}>mm</span>
+            {level.toFixed(0)}<span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-secondary)', marginLeft: 3 }}>mm</span>
           </div>
-          <div style={{ height: 3, background: '#151a28', borderRadius: 2, marginTop: 10 }}>
+          <div style={{ height: 3, background: 'var(--bg-secondary)', borderRadius: 2, marginTop: 10 }}>
             <div style={{ height: '100%', borderRadius: 2, background: '#2090b0', width: `${Math.min(100, level / 5)}%`, transition: 'width 0.6s ease' }} />
           </div>
         </div>
 
-        <div style={{ background: '#0d1117', border: '1px solid #1a1a2e', borderRadius: 10, padding: '14px 16px' }}>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
           <div style={{ fontSize: 10, color: '#333', textTransform: 'uppercase', letterSpacing: 0.5 }}>Quality</div>
           <div style={{ marginTop: 8 }}>
             <span className={`badge badge-${r.quality_label?.toLowerCase()}`} style={{ fontSize: 13, padding: '5px 12px' }}>{r.quality_label || '--'}</span>
           </div>
         </div>
 
-        <div style={{ background: '#0d1117', border: '1px solid #1a1a2e', borderRadius: 10, padding: '14px 16px' }}>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
           <div style={{ fontSize: 10, color: '#333', textTransform: 'uppercase', letterSpacing: 0.5 }}>Bloom Risk</div>
           <div style={{ marginTop: 8 }}>
             <span className={`badge badge-${r.bloom_risk?.toLowerCase()}`} style={{ fontSize: 13, padding: '5px 12px' }}>{r.bloom_risk || '--'}</span>
           </div>
         </div>
 
-        <div style={{ background: '#0d1117', border: '1px solid #1a1a2e', borderRadius: 10, padding: '14px 16px' }}>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
           <div style={{ fontSize: 10, color: '#333', textTransform: 'uppercase', letterSpacing: 0.5 }}>Active Alerts</div>
           <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono)', color: (alerts?.alert_count || 0) > 0 ? '#ff4455' : '#333', marginTop: 6 }}>
             {alerts?.alert_count ?? 0}
           </div>
         </div>
 
-        <div style={{ background: '#0d1117', border: '1px solid #1a1a2e', borderRadius: 10, padding: '14px 16px' }}>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
           <div style={{ fontSize: 10, color: '#333', textTransform: 'uppercase', letterSpacing: 0.5 }}>Clusters</div>
           <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#bb66ff', marginTop: 6 }}>
             {clusters?.clusters?.length ?? 0}

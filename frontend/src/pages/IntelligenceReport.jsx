@@ -1,7 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { fetchLatest, fetchAlerts, fetchClusters, fetchHistory } from '../api'
 
-const WHO = { tds: { limit: 500, unit: 'ppm' }, turbidity: { limit: 4, unit: 'NTU' }, nitrate: { limit: 50, unit: 'ppm' }, temperature: { limit: 35, unit: '°C' } }
+// BIS 10500:2012 acceptable limits — the parameters the sensor actually measures.
+const STANDARDS = {
+  tds: { limit: 500, unit: 'ppm' },
+  turbidity: { limit: 5, unit: 'NTU' },
+  ph: { min: 6.5, max: 8.5, unit: '' },
+  temperature: { limit: 35, unit: '°C' },
+}
 
 function trend(curr, prev) {
   if (!prev || !curr) return { arrow: '→', color: '#555', delta: 0 }
@@ -39,7 +45,8 @@ export default function IntelligenceReport() {
   const bloom = r.bloom_risk || 'Unknown'
   const dominantSrc = cls[0]?.probable_source || 'Unknown'
 
-  const healthScore = Math.round(Math.max(0, Math.min(100, 100 - (r.tds || 0) / 10 - (r.turbidity || 0) * 10 - (r.nitrate || 0) * 1.5)))
+  // Real health = inverse of the pipeline's BIS WQI (contamination_score 0-100)
+  const healthScore = Math.round(Math.max(0, Math.min(100, 100 - (r.contamination_score || 0))))
   const healthColor = healthScore > 70 ? '#44cc66' : healthScore > 40 ? '#ffaa00' : '#ff4455'
 
   const summary = `As of ${now}, the monitored river stretch shows ${quality} water quality with a health score of ${healthScore}/100. The dominant contamination source is ${dominantSrc}, contributing elevated parameter levels at ${cls.length} detected cluster(s). Algal bloom risk is currently ${bloom}. ${quality === 'Unsafe' ? 'Immediate action is recommended.' : 'Continued monitoring is advised.'}`
@@ -50,9 +57,10 @@ export default function IntelligenceReport() {
 
   /* Recommendations */
   const recs = []
-  if ((r.nitrate || 0) > 25) recs.push('Nitrate exceeds safe threshold — investigate upstream agricultural activity and consider temporary irrigation restrictions.')
-  if ((r.tds || 0) > 500) recs.push('TDS above WHO guideline — check for industrial discharge upstream and increase monitoring frequency.')
-  if ((r.turbidity || 0) > 3.5) recs.push('Turbidity elevated — possible sediment runoff. Inspect construction or land clearing activities near the river.')
+  const phVal = r.ph
+  if (phVal != null && (phVal < 6.5 || phVal > 8.5)) recs.push(`pH ${phVal.toFixed(1)} outside BIS range (6.5–8.5) — abnormal pH indicates industrial effluent; investigate upstream discharge.`)
+  if ((r.tds || 0) > 500) recs.push('TDS above BIS limit — check for industrial/sewage discharge upstream and increase monitoring frequency.')
+  if ((r.turbidity || 0) > 5) recs.push('Turbidity elevated — possible sediment runoff or sewage. Inspect land clearing / drain outfalls near the river.')
   if (bloom === 'HIGH') recs.push('High bloom risk — deploy aeration equipment and notify downstream water treatment facilities.')
   if (cls.length > 2) recs.push('Multiple pollution clusters detected — coordinate with local environmental authority for a joint inspection.')
   if (recs.length === 0) recs.push('All parameters within safe limits. Continue routine monitoring schedule.')
@@ -75,9 +83,9 @@ export default function IntelligenceReport() {
       </div>
 
       {/* Report document */}
-      <div className="report-page" style={{ background: '#0d1117', border: '1px solid #1a2332', borderRadius: 12, padding: 32, maxWidth: 900 }}>
+      <div className="report-page" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 32, maxWidth: 900 }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #1a2332', paddingBottom: 16, marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border)', paddingBottom: 16, marginBottom: 24 }}>
           <div>
             <div style={{ fontSize: 18, fontWeight: 700 }}>River Water Quality Assessment</div>
             <div style={{ fontSize: 11, color: '#555', marginTop: 4 }}>Monitoring Station: Bangalore Urban — {now}</div>
@@ -87,29 +95,31 @@ export default function IntelligenceReport() {
 
         {/* 1. Executive Summary */}
         <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#00d4ff', marginBottom: 10 }}>1. Executive Summary</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--bg-card)', marginBottom: 10 }}>1. Executive Summary</div>
           <p style={{ fontSize: 12, color: '#999', lineHeight: 1.8 }}>{summary}</p>
         </div>
 
         {/* 2. Parameter Status */}
         <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#00d4ff', marginBottom: 10 }}>2. Parameter Status</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--bg-card)', marginBottom: 10 }}>2. Parameter Status</div>
           <table className="data-table" style={{ fontSize: 12 }}>
-            <thead><tr><th>Parameter</th><th>Current</th><th>WHO Limit</th><th>Status</th><th>Trend</th></tr></thead>
+            <thead><tr><th>Parameter</th><th>Current</th><th>BIS Limit</th><th>Status</th><th>Trend</th></tr></thead>
             <tbody>
               {[
                 { key: 'tds', label: 'TDS' }, { key: 'turbidity', label: 'Turbidity' },
-                { key: 'nitrate', label: 'Nitrate' }, { key: 'temperature', label: 'Temperature' },
+                { key: 'ph', label: 'pH' }, { key: 'temperature', label: 'Temperature' },
               ].map(p => {
                 const val = r[p.key]
-                const w = WHO[p.key]
-                const ok = val != null && val <= w.limit
+                const w = STANDARDS[p.key]
+                const isRange = w.min != null
+                const ok = val != null && (isRange ? (val >= w.min && val <= w.max) : val <= w.limit)
+                const limitText = isRange ? `${w.min}–${w.max}` : `${w.limit} ${w.unit}`
                 const t = trend(val, prevReading[p.key])
                 return (
                   <tr key={p.key}>
-                    <td style={{ color: '#ccc' }}>{p.label}</td>
+                    <td style={{ color: 'var(--text-secondary)' }}>{p.label}</td>
                     <td>{val?.toFixed(2) ?? '--'} {w.unit}</td>
-                    <td>{w.limit} {w.unit}</td>
+                    <td>{limitText}</td>
                     <td><span className={`badge ${ok ? 'badge-safe' : 'badge-unsafe'}`}>{ok ? 'OK' : 'EXCEEDED'}</span></td>
                     <td style={{ color: t.color }}>{t.arrow} {t.delta !== 0 ? (t.delta > 0 ? '+' : '') + t.delta.toFixed(1) : ''}</td>
                   </tr>
@@ -121,7 +131,7 @@ export default function IntelligenceReport() {
 
         {/* 3. Hotspot Summary */}
         <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#00d4ff', marginBottom: 10 }}>3. Hotspot Summary</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--bg-card)', marginBottom: 10 }}>3. Hotspot Summary</div>
           {cls.length > 0 ? (
             <table className="data-table" style={{ fontSize: 12 }}>
               <thead><tr><th>Cluster</th><th>Center</th><th>Severity</th><th>Points</th><th>Spread</th><th>Source</th></tr></thead>
@@ -143,39 +153,39 @@ export default function IntelligenceReport() {
 
         {/* 4. Source Attribution */}
         <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#00d4ff', marginBottom: 10 }}>4. Source Attribution</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--bg-card)', marginBottom: 10 }}>4. Source Attribution</div>
           {cls.length > 0 ? cls.map(c => (
-            <div key={c.cluster_id} style={{ padding: '8px 0', borderBottom: '1px solid #151a28', fontSize: 12, color: '#888' }}>
-              <strong style={{ color: '#ccc' }}>{c.probable_source}</strong> — Cluster #{c.cluster_id}, {c.reading_count} linked readings, {c.severity} severity, spreading {c.spread_direction}
+            <div key={c.cluster_id} style={{ padding: '8px 0', borderBottom: '1px solid #151a28', fontSize: 12, color: 'var(--text-muted)' }}>
+              <strong style={{ color: 'var(--text-secondary)' }}>{c.probable_source}</strong> — Cluster #{c.cluster_id}, {c.reading_count} linked readings, {c.severity} severity, spreading {c.spread_direction}
             </div>
           )) : <p style={{ fontSize: 12, color: '#555' }}>Insufficient data for source attribution.</p>}
         </div>
 
         {/* 5. Bloom Assessment */}
         <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#00d4ff', marginBottom: 10 }}>5. Bloom Assessment</div>
-          <p style={{ fontSize: 12, color: '#888', lineHeight: 1.8 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--bg-card)', marginBottom: 10 }}>5. Bloom Assessment</div>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.8 }}>
             Current algal bloom risk: <span className={`badge badge-${bloom.toLowerCase()}`}>{bloom}</span>.
-            {' '}Key drivers: Nitrate at {r.nitrate?.toFixed(1) ?? '--'} ppm, Temperature at {r.temperature?.toFixed(1) ?? '--'} °C.
-            {bloom === 'HIGH' ? ' Bloom conditions are imminent — estimated visible bloom within 5 days.' : bloom === 'MODERATE' ? ' Elevated nutrient levels require monitoring — bloom possible within 15 days.' : ' No immediate bloom risk. Estimated 30+ days under current conditions.'}
+            {' '}Drivers (BloomPredictor): pH {r.ph?.toFixed(1) ?? '--'}, Temperature {r.temperature?.toFixed(1) ?? '--'} °C, Turbidity {r.turbidity?.toFixed(1) ?? '--'} NTU.
+            {bloom === 'HIGH' ? ' Warm, alkaline, clear water — bloom-favorable conditions present.' : bloom === 'MODERATE' ? ' Borderline conditions — monitor pH and temperature trends.' : ' Conditions not favorable for algal bloom.'}
           </p>
         </div>
 
         {/* 6. Recommendations */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#00d4ff', marginBottom: 10 }}>6. Recommendations</div>
-          <ul style={{ fontSize: 12, color: '#888', lineHeight: 2, paddingLeft: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--bg-card)', marginBottom: 10 }}>6. Recommendations</div>
+          <ul style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 2, paddingLeft: 20 }}>
             {recs.map((rec, i) => <li key={i}>{rec}</li>)}
           </ul>
         </div>
 
         {/* Health score footer */}
-        <div style={{ borderTop: '1px solid #1a2332', paddingTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: 11, color: '#333' }}>Generated by Water Monitor Intelligence Engine</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 11, color: '#555' }}>Health Score:</span>
             <span style={{ fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-mono)', color: healthColor }}>{healthScore}</span>
-            <span style={{ fontSize: 11, color: '#444' }}>/100</span>
+            <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>/100</span>
           </div>
         </div>
       </div>

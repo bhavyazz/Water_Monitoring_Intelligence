@@ -19,7 +19,7 @@ export default function Alerts() {
       </div>
 
       {data?.alert_count > 0 && (
-        <div style={{ marginBottom: 20, fontSize: 12, color: '#888' }}>
+        <div style={{ marginBottom: 20, fontSize: 12, color: 'var(--text-muted)' }}>
           {data.alert_count} alert group{data.alert_count !== 1 ? 's' : ''} from recent readings
         </div>
       )}
@@ -39,7 +39,7 @@ export default function Alerts() {
               <div className="alert-info">
                 <div className="alert-type">
                   <span className={`badge badge-${a.level?.toLowerCase()}`}>{a.level}</span>
-                  <span style={{ marginLeft: 10, color: '#888', fontSize: 11, textTransform: 'uppercase' }}>
+                  <span style={{ marginLeft: 10, color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase' }}>
                     {a.type === 'water_quality' ? 'Water Quality' : 'Algal Bloom'}
                   </span>
                 </div>

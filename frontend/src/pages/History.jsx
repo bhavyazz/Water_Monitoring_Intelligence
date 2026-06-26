@@ -11,9 +11,9 @@ const TIME_FILTERS = [
 ]
 
 const CHART_LINES = [
-  { key: 'tds', label: 'TDS', color: '#f0f0f0' },
+  { key: 'tds', label: 'TDS', color: '#2090b0' },
   { key: 'turbidity', label: 'Turbidity', color: '#888888' },
-  { key: 'nitrate', label: 'Nitrate', color: '#ffaa00' },
+  { key: 'ph', label: 'pH', color: '#6c5ce7' },
   { key: 'temperature', label: 'Temperature', color: '#44cc66' },
 ]
 
@@ -45,7 +45,7 @@ export default function History() {
     time: r.timestamp ? new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '',
     tds: r.tds,
     turbidity: r.turbidity,
-    nitrate: r.nitrate,
+    ph: r.ph,
     temperature: r.temperature,
   }))
 
@@ -111,7 +111,7 @@ export default function History() {
           <thead>
             <tr>
               <th>Time</th><th>Temp</th><th>TDS</th><th>Turb</th>
-              <th>Level</th><th>Nitrate</th><th>Quality</th><th>Bloom</th>
+              <th>Level</th><th>pH</th><th>Quality</th><th>Bloom</th>
             </tr>
           </thead>
           <tbody>
@@ -122,7 +122,7 @@ export default function History() {
                 <td>{r.tds?.toFixed(0)}</td>
                 <td>{r.turbidity?.toFixed(2)}</td>
                 <td>{r.level?.toFixed(0)}</td>
-                <td>{r.nitrate?.toFixed(2)}</td>
+                <td>{r.ph?.toFixed(2)}</td>
                 <td><span className={qualityClass(r.quality_label)}>{r.quality_label}</span></td>
                 <td><span className={qualityClass(r.bloom_risk)}>{r.bloom_risk}</span></td>
               </tr>

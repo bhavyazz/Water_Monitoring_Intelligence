@@ -36,11 +36,12 @@ class WaterReading:
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     # ── Enriched fields (filled by downstream stages) ─────────────
-    nitrate: Optional[float] = None       # ppm  (predicted)
+    nitrate: Optional[float] = None       # ppm  (predicted) — DEPRECATED, kept for compat
     ph: Optional[float] = None            # pH value (predicted from colorimetric biosensor)
+    contamination_score: Optional[float] = None  # WQI score 0-100
     quality_label: Optional[str] = None   # Safe / Moderate / Unsafe
     bloom_risk: Optional[str] = None      # LOW / MODERATE / HIGH
-    sensor_mode: Optional[str] = None     # "pH" or "Nitrate" — current color sensor mapping
+    sensor_mode: Optional[str] = None     # current color sensor mapping
 
     def to_dict(self) -> dict:
         """Serialise to a JSON-friendly dictionary."""
@@ -55,6 +56,7 @@ class WaterReading:
             "timestamp": self.timestamp.isoformat(),
             "nitrate": self.nitrate,
             "ph": self.ph,
+            "contamination_score": self.contamination_score,
             "quality_label": self.quality_label,
             "bloom_risk": self.bloom_risk,
             "sensor_mode": self.sensor_mode,

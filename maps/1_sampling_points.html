@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_5bc0c6b8f36d7a02ca396586f1a3df17 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+    <div style="position:fixed; bottom:30px; left:30px; z-index:1000;
+         background:white; padding:12px 16px; border-radius:8px;
+         box-shadow:0 2px 8px rgba(0,0,0,0.15); font-family:Arial; font-size:12px;">
+        <b>WQI Contamination Score</b><br>
+        <span style="color:#22c55e;">&#9679;</span> 0-25 Excellent (Safe)<br>
+        <span style="color:#f59e0b;">&#9679;</span> 26-50 Good (Safe)<br>
+        <span style="color:#f97316;">&#9679;</span> 51-75 Poor (Moderate)<br>
+        <span style="color:#ef4444;">&#9679;</span> 76-100 Critical (Unsafe)<br>
+        <br><i>Geotagged via smartphone GPS</i>
+    </div>
+    
+    
+            <div class="folium-map" id="map_5bc0c6b8f36d7a02ca396586f1a3df17" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_5bc0c6b8f36d7a02ca396586f1a3df17 = L.map(
+                "map_5bc0c6b8f36d7a02ca396586f1a3df17",
+                {
+                    center: [12.93288, 77.49890500000001],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 13,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_4c4991b66c56900f6c5de4590eb3c7f7 = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_4c4991b66c56900f6c5de4590eb3c7f7.addTo(map_5bc0c6b8f36d7a02ca396586f1a3df17);
+        
+    
+            var tile_layer_6c74a95f199775dd25a5efe66a2bb193 = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Esri World Imagery",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_6c74a95f199775dd25a5efe66a2bb193.addTo(map_5bc0c6b8f36d7a02ca396586f1a3df17);
+        
+    
+            var feature_group_be97df4914b98ffd66c0742cf970af40 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var circle_marker_280a467912c78d38bad090835b513f8c = L.circleMarker(
+                [12.9555, 77.5185],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_268d57c0a605562b9eeb36a3658eba06 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_6490c2c27d61160b7b0add9f75cba7ac = $(`<div id="html_6490c2c27d61160b7b0add9f75cba7ac" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">A1: Nayandahalli Bridge - Left Bank</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>vrushabavathi_nayandahalli</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9555, 77.5185</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>1050 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>12.3 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>5.8</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>30.5 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f97316;">59.7</b> (Poor)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Moderate</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Dark water, chemical odor, foam visible on surface</p>         </div>         </div>`)[0];
+                popup_268d57c0a605562b9eeb36a3658eba06.setContent(html_6490c2c27d61160b7b0add9f75cba7ac);
+            
+        
+
+        circle_marker_280a467912c78d38bad090835b513f8c.bindPopup(popup_268d57c0a605562b9eeb36a3658eba06)
+        ;
+
+        
+    
+    
+            circle_marker_280a467912c78d38bad090835b513f8c.bindTooltip(
+                `<div>
+                     A1: WQI=60 (Poor)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_5ec83bac58a6d326ea05d3874f3d2ef3 = L.circleMarker(
+                [12.9548, 77.5175],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_9fad68d1860f19c96293ce3e163a67c6 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_ede9649ab1b62628e81504f58c0ac2ee = $(`<div id="html_ede9649ab1b62628e81504f58c0ac2ee" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">A2: Nayandahalli Bridge - Right Bank</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>vrushabavathi_nayandahalli</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9548, 77.5175</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>980 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>11.5 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>6.0</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>30.2 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f97316;">56.2</b> (Poor)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Moderate</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Discolored water near factory outfall pipe</p>         </div>         </div>`)[0];
+                popup_9fad68d1860f19c96293ce3e163a67c6.setContent(html_ede9649ab1b62628e81504f58c0ac2ee);
+            
+        
+
+        circle_marker_5ec83bac58a6d326ea05d3874f3d2ef3.bindPopup(popup_9fad68d1860f19c96293ce3e163a67c6)
+        ;
+
+        
+    
+    
+            circle_marker_5ec83bac58a6d326ea05d3874f3d2ef3.bindTooltip(
+                `<div>
+                     A2: WQI=56 (Poor)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_cdad9779d21120fab4434601d68ce2a8 = L.circleMarker(
+                [12.954, 77.5178],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_bb14895ccf2aa430146b1342879b8596 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_efae35fbbffaeac25e8b7716ef846b42 = $(`<div id="html_efae35fbbffaeac25e8b7716ef846b42" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">A3: Factory Outfall - 50m downstream</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>vrushabavathi_nayandahalli</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9540, 77.5178</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>1180 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>14.8 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>5.5</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>31.0 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f97316;">66.0</b> (Poor)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Moderate</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Direct industrial discharge point, foul chemical smell</p>         </div>         </div>`)[0];
+                popup_bb14895ccf2aa430146b1342879b8596.setContent(html_efae35fbbffaeac25e8b7716ef846b42);
+            
+        
+
+        circle_marker_cdad9779d21120fab4434601d68ce2a8.bindPopup(popup_bb14895ccf2aa430146b1342879b8596)
+        ;
+
+        
+    
+    
+            circle_marker_cdad9779d21120fab4434601d68ce2a8.bindTooltip(
+                `<div>
+                     A3: WQI=66 (Poor)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_3185432a3316edc285f7f67c86204cc2 = L.circleMarker(
+                [12.9535, 77.5172],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_fc4ee3a0bfa739cd1ea050fdb929bbea = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_de19e72d7ac2bd518c9a99b85e23ac1c = $(`<div id="html_de19e72d7ac2bd518c9a99b85e23ac1c" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">A4: Nayandahalli - 100m downstream</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>vrushabavathi_nayandahalli</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9535, 77.5172</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>920 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>10.2 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>6.2</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>29.8 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f97316;">52.4</b> (Poor)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Moderate</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Slightly diluted downstream of outfall</p>         </div>         </div>`)[0];
+                popup_fc4ee3a0bfa739cd1ea050fdb929bbea.setContent(html_de19e72d7ac2bd518c9a99b85e23ac1c);
+            
+        
+
+        circle_marker_3185432a3316edc285f7f67c86204cc2.bindPopup(popup_fc4ee3a0bfa739cd1ea050fdb929bbea)
+        ;
+
+        
+    
+    
+            circle_marker_3185432a3316edc285f7f67c86204cc2.bindTooltip(
+                `<div>
+                     A4: WQI=52 (Poor)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_60c5213f6db12742ae89251440ddc0fa = L.circleMarker(
+                [12.9455, 77.5105],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_a69d1a2835a0fe1cc59caa1a0accf743 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_7f2eeb11a323920b0c1c7304d626180a = $(`<div id="html_7f2eeb11a323920b0c1c7304d626180a" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">A5: Mysore Road Bridge - Upstream</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>vrushabavathi_mysore_road</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9455, 77.5105</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>870 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>9.5 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>6.3</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>29.5 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f97316;">50.1</b> (Poor)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Moderate</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Mixed industrial and residential discharge visible</p>         </div>         </div>`)[0];
+                popup_a69d1a2835a0fe1cc59caa1a0accf743.setContent(html_7f2eeb11a323920b0c1c7304d626180a);
+            
+        
+
+        circle_marker_60c5213f6db12742ae89251440ddc0fa.bindPopup(popup_a69d1a2835a0fe1cc59caa1a0accf743)
+        ;
+
+        
+    
+    
+            circle_marker_60c5213f6db12742ae89251440ddc0fa.bindTooltip(
+                `<div>
+                     A5: WQI=50 (Poor)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_4dda786699b7ea23d8abe8f0ef75ab87 = L.circleMarker(
+                [12.9445, 77.5095],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f59e0b", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_ecaf02aaabad562a6ba320a293666665 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_c0dcd2c5026a46496605fe139dd69792 = $(`<div id="html_c0dcd2c5026a46496605fe139dd69792" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">A6: Mysore Road Bridge - Downstream</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>vrushabavathi_mysore_road</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9445, 77.5095</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>850 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>8.8 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>6.5</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>29.2 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f59e0b;">47.1</b> (Good)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Safe</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Post-bridge section, slightly clearer due to aeration</p>         </div>         </div>`)[0];
+                popup_ecaf02aaabad562a6ba320a293666665.setContent(html_c0dcd2c5026a46496605fe139dd69792);
+            
+        
+
+        circle_marker_4dda786699b7ea23d8abe8f0ef75ab87.bindPopup(popup_ecaf02aaabad562a6ba320a293666665)
+        ;
+
+        
+    
+    
+            circle_marker_4dda786699b7ea23d8abe8f0ef75ab87.bindTooltip(
+                `<div>
+                     A6: WQI=47 (Good)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_ffb66df432b1103aa6fbb691b723d279 = L.circleMarker(
+                [12.9245, 77.4995],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f59e0b", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_e1a825f217bac2fa02d0664538523319 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_f25601fcc34d690a79b6591294cb371b = $(`<div id="html_f25601fcc34d690a79b6591294cb371b" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">B1: RVCE Campus - River Bank</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>vrushabavathi_rvce</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9245, 77.4995</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>680 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>6.5 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>7.8</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>29.0 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f59e0b;">47.0</b> (Good)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Safe</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Sewage odor, residential area discharge visible</p>         </div>         </div>`)[0];
+                popup_e1a825f217bac2fa02d0664538523319.setContent(html_f25601fcc34d690a79b6591294cb371b);
+            
+        
+
+        circle_marker_ffb66df432b1103aa6fbb691b723d279.bindPopup(popup_e1a825f217bac2fa02d0664538523319)
+        ;
+
+        
+    
+    
+            circle_marker_ffb66df432b1103aa6fbb691b723d279.bindTooltip(
+                `<div>
+                     B1: WQI=47 (Good)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_90059a164f32a8ca6ae2058441faa27b = L.circleMarker(
+                [12.9265, 77.5005],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_78580c65f102d9ba64a01b79795eba60 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_9c58b4415430a5aee3e2e2363373a5d4 = $(`<div id="html_9c58b4415430a5aee3e2e2363373a5d4" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">B2: RVCE Campus - Drain Outfall</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>campus_drain</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9265, 77.5005</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>720 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>7.2 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>8.0</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>29.5 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f97316;">50.5</b> (Poor)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Moderate</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Campus and residential drain merging into river</p>         </div>         </div>`)[0];
+                popup_78580c65f102d9ba64a01b79795eba60.setContent(html_9c58b4415430a5aee3e2e2363373a5d4);
+            
+        
+
+        circle_marker_90059a164f32a8ca6ae2058441faa27b.bindPopup(popup_78580c65f102d9ba64a01b79795eba60)
+        ;
+
+        
+    
+    
+            circle_marker_90059a164f32a8ca6ae2058441faa27b.bindTooltip(
+                `<div>
+                     B2: WQI=50 (Poor)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_afc5878aca473daa25a160a22a530593 = L.circleMarker(
+                [12.9235, 77.4988],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f59e0b", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_46ef8e988a38ac1a15f1dcf5a877c1b5 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_22f109fa50156ecbc1d4509af5f0e827 = $(`<div id="html_22f109fa50156ecbc1d4509af5f0e827" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">B3: RVCE - 50m from Campus Gate</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>vrushabavathi_rvce</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9235, 77.4988</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>650 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>5.8 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>7.9</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>28.8 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f59e0b;">47.1</b> (Good)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Safe</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Domestic wastewater discharge from nearby apartments</p>         </div>         </div>`)[0];
+                popup_46ef8e988a38ac1a15f1dcf5a877c1b5.setContent(html_22f109fa50156ecbc1d4509af5f0e827);
+            
+        
+
+        circle_marker_afc5878aca473daa25a160a22a530593.bindPopup(popup_46ef8e988a38ac1a15f1dcf5a877c1b5)
+        ;
+
+        
+    
+    
+            circle_marker_afc5878aca473daa25a160a22a530593.bindTooltip(
+                `<div>
+                     B3: WQI=47 (Good)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_502245a2aba69ad2455807e603061977 = L.circleMarker(
+                [12.928, 77.502],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f59e0b", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_51d83ebf812c42144afefb3c16ffa6c8 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_532968e57f5faf5e41e5d14951006b89 = $(`<div id="html_532968e57f5faf5e41e5d14951006b89" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">B4: Jnana Bharathi Lake - North Shore</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>jnana_bharathi_lake</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9280, 77.5020</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>520 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>4.5 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>8.2</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>28.2 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f59e0b;">46.1</b> (Good)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Safe</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Lake receiving runoff from campus drain, algal presence</p>         </div>         </div>`)[0];
+                popup_51d83ebf812c42144afefb3c16ffa6c8.setContent(html_532968e57f5faf5e41e5d14951006b89);
+            
+        
+
+        circle_marker_502245a2aba69ad2455807e603061977.bindPopup(popup_51d83ebf812c42144afefb3c16ffa6c8)
+        ;
+
+        
+    
+    
+            circle_marker_502245a2aba69ad2455807e603061977.bindTooltip(
+                `<div>
+                     B4: WQI=46 (Good)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_bd8d80dfbe70fcbca79414b3260699e9 = L.circleMarker(
+                [12.9275, 77.5015],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f59e0b", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_2b23fb7ac6577a9e2a4cec43ec0cb65c = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_1bd4f6174aa4f39152c0041e8c06a93c = $(`<div id="html_1bd4f6174aa4f39152c0041e8c06a93c" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">B5: Jnana Bharathi Lake - South Shore</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>jnana_bharathi_lake</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9275, 77.5015</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>480 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>4.0 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>8.3</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>28.0 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f59e0b;">44.6</b> (Good)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Safe</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Stagnant water, greenish tint from algal growth</p>         </div>         </div>`)[0];
+                popup_2b23fb7ac6577a9e2a4cec43ec0cb65c.setContent(html_1bd4f6174aa4f39152c0041e8c06a93c);
+            
+        
+
+        circle_marker_bd8d80dfbe70fcbca79414b3260699e9.bindPopup(popup_2b23fb7ac6577a9e2a4cec43ec0cb65c)
+        ;
+
+        
+    
+    
+            circle_marker_bd8d80dfbe70fcbca79414b3260699e9.bindTooltip(
+                `<div>
+                     B5: WQI=45 (Good)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_71756861367e0c46f0607b7c6d6680c1 = L.circleMarker(
+                [12.9258, 77.5008],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f59e0b", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_c00bf96ea5e8bcc7b5a164968f59ce08 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_8e0926ff18321f6c5bd498a280f0d44c = $(`<div id="html_8e0926ff18321f6c5bd498a280f0d44c" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">B6: Campus Drain - Mid Point</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>campus_drain</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9258, 77.5008</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>700 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>6.8 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>7.7</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>29.2 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f59e0b;">46.6</b> (Good)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Safe</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Open drain carrying mixed residential wastewater</p>         </div>         </div>`)[0];
+                popup_c00bf96ea5e8bcc7b5a164968f59ce08.setContent(html_8e0926ff18321f6c5bd498a280f0d44c);
+            
+        
+
+        circle_marker_71756861367e0c46f0607b7c6d6680c1.bindPopup(popup_c00bf96ea5e8bcc7b5a164968f59ce08)
+        ;
+
+        
+    
+    
+            circle_marker_71756861367e0c46f0607b7c6d6680c1.bindTooltip(
+                `<div>
+                     B6: WQI=47 (Good)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_24861a59af93e0ed80e0fcd04a8fbc1a = L.circleMarker(
+                [12.9125, 77.4855],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f59e0b", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_bbd2d478e43b8fa0a518a5ee303fd4da = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_45c60be7b619912b73587a9730112184 = $(`<div id="html_45c60be7b619912b73587a9730112184" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">C1: Kengeri River Section</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>vrushabavathi_kengeri</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9125, 77.4855</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>420 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>3.8 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>7.3</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>27.0 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f59e0b;">31.2</b> (Good)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Safe</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Upstream pollution diluted, agricultural land nearby</p>         </div>         </div>`)[0];
+                popup_bbd2d478e43b8fa0a518a5ee303fd4da.setContent(html_45c60be7b619912b73587a9730112184);
+            
+        
+
+        circle_marker_24861a59af93e0ed80e0fcd04a8fbc1a.bindPopup(popup_bbd2d478e43b8fa0a518a5ee303fd4da)
+        ;
+
+        
+    
+    
+            circle_marker_24861a59af93e0ed80e0fcd04a8fbc1a.bindTooltip(
+                `<div>
+                     C1: WQI=31 (Good)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_1d5b49a8392247b32e24a0253eb291dc = L.circleMarker(
+                [12.9105, 77.4875],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f59e0b", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_8156c79f05ae587921519547ff5d9c2b = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_60dfd0bcab22d083342795bd57d3edbb = $(`<div id="html_60dfd0bcab22d083342795bd57d3edbb" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">C2: Kengeri Village Pond - Center</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>kengeri_pond</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9105, 77.4875</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>380 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>3.2 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>7.5</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>26.5 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f59e0b;">29.6</b> (Good)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Safe</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Village pond, turbid from soil runoff after rains</p>         </div>         </div>`)[0];
+                popup_8156c79f05ae587921519547ff5d9c2b.setContent(html_60dfd0bcab22d083342795bd57d3edbb);
+            
+        
+
+        circle_marker_1d5b49a8392247b32e24a0253eb291dc.bindPopup(popup_8156c79f05ae587921519547ff5d9c2b)
+        ;
+
+        
+    
+    
+            circle_marker_1d5b49a8392247b32e24a0253eb291dc.bindTooltip(
+                `<div>
+                     C2: WQI=30 (Good)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_e73837bf25e10b67b386d7142717eae5 = L.circleMarker(
+                [12.9055, 77.4805],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f59e0b", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_73b310cef7a7909c7fe3862afca691a4 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_3c4574124cc40c752989ed2ba68176a4 = $(`<div id="html_3c4574124cc40c752989ed2ba68176a4" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">C3: Agricultural Canal - Inlet</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>agricultural_canal</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9055, 77.4805</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>350 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>4.2 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>7.2</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>26.8 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f59e0b;">29.4</b> (Good)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Safe</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Irrigation canal drawing river water, soil sediment visible</p>         </div>         </div>`)[0];
+                popup_73b310cef7a7909c7fe3862afca691a4.setContent(html_3c4574124cc40c752989ed2ba68176a4);
+            
+        
+
+        circle_marker_e73837bf25e10b67b386d7142717eae5.bindPopup(popup_73b310cef7a7909c7fe3862afca691a4)
+        ;
+
+        
+    
+    
+            circle_marker_e73837bf25e10b67b386d7142717eae5.bindTooltip(
+                `<div>
+                     C3: WQI=29 (Good)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_e9be9167d56089cf086453b157d5fda2 = L.circleMarker(
+                [12.908, 77.483],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_809e07ea6855a21b4df72d206d4b0460 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_d417d73cd10329220abf01c40117adda = $(`<div id="html_d417d73cd10329220abf01c40117adda" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">C4: Kommaghatta Lake - Inlet</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>kommaghatta_lake</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9080, 77.4830</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>310 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>2.8 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>7.4</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>26.0 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#22c55e;">25.0</b> (Excellent)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Safe</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Lake receiving agricultural runoff, relatively cleaner</p>         </div>         </div>`)[0];
+                popup_809e07ea6855a21b4df72d206d4b0460.setContent(html_d417d73cd10329220abf01c40117adda);
+            
+        
+
+        circle_marker_e9be9167d56089cf086453b157d5fda2.bindPopup(popup_809e07ea6855a21b4df72d206d4b0460)
+        ;
+
+        
+    
+    
+            circle_marker_e9be9167d56089cf086453b157d5fda2.bindTooltip(
+                `<div>
+                     C4: WQI=25 (Excellent)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_598acbfc0c50a6f41c23044e97174896 = L.circleMarker(
+                [12.9075, 77.4825],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f59e0b", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_cfb920b956dfdb19e20ab1423f034d2d = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_01261865d3566dd824f5d255b2074ffa = $(`<div id="html_01261865d3566dd824f5d255b2074ffa" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">C5: Kommaghatta Lake - Center</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>kommaghatta_lake</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9075, 77.4825</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>290 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>2.5 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>7.6</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>25.8 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#f59e0b;">25.2</b> (Good)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Safe</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Deeper lake water, diluted but persistent turbidity</p>         </div>         </div>`)[0];
+                popup_cfb920b956dfdb19e20ab1423f034d2d.setContent(html_01261865d3566dd824f5d255b2074ffa);
+            
+        
+
+        circle_marker_598acbfc0c50a6f41c23044e97174896.bindPopup(popup_cfb920b956dfdb19e20ab1423f034d2d)
+        ;
+
+        
+    
+    
+            circle_marker_598acbfc0c50a6f41c23044e97174896.bindTooltip(
+                `<div>
+                     C5: WQI=25 (Good)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_af3cde31d8aba65e22a22f2a3bb8c4d5 = L.circleMarker(
+                [12.97, 77.535],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_9fa59453d430d240cb5d89dd34be220d = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_e9a6548cdf23a3c2b969a13b30f75354 = $(`<div id="html_e9a6548cdf23a3c2b969a13b30f75354" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">N1: Upstream Clean Stream (Reference)</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>vrushabavathi_nayandahalli</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9700, 77.5350</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>180 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>1.2 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>7.1</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>25.0 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#22c55e;">12.4</b> (Excellent)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Safe</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Upstream reference point, relatively unpolluted tributary</p>         </div>         </div>`)[0];
+                popup_9fa59453d430d240cb5d89dd34be220d.setContent(html_e9a6548cdf23a3c2b969a13b30f75354);
+            
+        
+
+        circle_marker_af3cde31d8aba65e22a22f2a3bb8c4d5.bindPopup(popup_9fa59453d430d240cb5d89dd34be220d)
+        ;
+
+        
+    
+    
+            circle_marker_af3cde31d8aba65e22a22f2a3bb8c4d5.bindTooltip(
+                `<div>
+                     N1: WQI=12 (Excellent)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_a10028dfbcd15bfa739aa0e20d2594af = L.circleMarker(
+                [12.93, 77.46],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_c3fe06dad65baf9a829eb454d91fcbe8 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_7658db625353b34a8a6d9573a25d14e6 = $(`<div id="html_7658db625353b34a8a6d9573a25d14e6" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">N2: Isolated Pond - 2km from River</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>vrushabavathi_kengeri</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9300, 77.4600</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>220 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>1.5 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>7.0</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>25.5 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#22c55e;">14.0</b> (Excellent)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Safe</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Isolated rainwater pond, no direct river connection</p>         </div>         </div>`)[0];
+                popup_c3fe06dad65baf9a829eb454d91fcbe8.setContent(html_7658db625353b34a8a6d9573a25d14e6);
+            
+        
+
+        circle_marker_a10028dfbcd15bfa739aa0e20d2594af.bindPopup(popup_c3fe06dad65baf9a829eb454d91fcbe8)
+        ;
+
+        
+    
+    
+            circle_marker_a10028dfbcd15bfa739aa0e20d2594af.bindTooltip(
+                `<div>
+                     N2: WQI=14 (Excellent)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_7c4e14f55f1f7843085124d73635e6d5 = L.circleMarker(
+                [12.95, 77.47],
+                {"bubblingMouseEvents": true, "color": "#1e293b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.8, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 2}
+            ).addTo(feature_group_be97df4914b98ffd66c0742cf970af40);
+        
+    
+        var popup_c49a2054dc74cd300e7204b1cc00fc3c = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_0e95244d977bb52b829e945bf841c936 = $(`<div id="html_0e95244d977bb52b829e945bf841c936" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; min-width: 280px;">             <h4 style="margin:0 0 8px 0; color:#1e293b;">N3: Hilltop Spring - Reference</h4>             <table style="font-size:13px; border-collapse:collapse; width:100%;">                 <tr><td style="padding:2px 8px;"><b>Water Body</b></td><td>vrushabavathi_rvce</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>GPS</b></td><td>12.9500, 77.4700</td></tr>                 <tr><td style="padding:2px 8px;"><b>TDS</b></td><td>150 ppm</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Turbidity</b></td><td>0.8 NTU</td></tr>                 <tr><td style="padding:2px 8px;"><b>pH</b></td><td>6.9</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Temperature</b></td><td>24.5 C</td></tr>                 <tr><td style="padding:2px 8px;"><b>WQI Score</b></td>                     <td><b style="color:#22c55e;">10.4</b> (Excellent)</td></tr>                 <tr style="background:#f8fafc;"><td style="padding:2px 8px;"><b>Quality</b></td><td>Safe</td></tr>             </table>             <p style="font-size:11px; color:#64748b; margin:6px 0 0 0;">Natural spring water, baseline reference</p>         </div>         </div>`)[0];
+                popup_c49a2054dc74cd300e7204b1cc00fc3c.setContent(html_0e95244d977bb52b829e945bf841c936);
+            
+        
+
+        circle_marker_7c4e14f55f1f7843085124d73635e6d5.bindPopup(popup_c49a2054dc74cd300e7204b1cc00fc3c)
+        ;
+
+        
+    
+    
+            circle_marker_7c4e14f55f1f7843085124d73635e6d5.bindTooltip(
+                `<div>
+                     N3: WQI=10 (Excellent)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_be97df4914b98ffd66c0742cf970af40.addTo(map_5bc0c6b8f36d7a02ca396586f1a3df17);
+        
+    
+            var feature_group_6ebdad307fecf91ed95e7860cda34018 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var marker_addd28aef9e602a7decf053597e63b5b = L.marker(
+                [12.9555, 77.5185],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_0b547539aa4e58cf8cd7ea233ce832a5 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f97316;white-space:nowrap;\"\u003eA1\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_addd28aef9e602a7decf053597e63b5b.setIcon(div_icon_0b547539aa4e58cf8cd7ea233ce832a5);
+            
+    
+            var marker_18ba0edd65365c677c0c31b761e4df30 = L.marker(
+                [12.9548, 77.5175],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_37a4af181ecbd425eaed81d75cc5f626 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f97316;white-space:nowrap;\"\u003eA2\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_18ba0edd65365c677c0c31b761e4df30.setIcon(div_icon_37a4af181ecbd425eaed81d75cc5f626);
+            
+    
+            var marker_e1ba57c16a1395b11488eff164c63b69 = L.marker(
+                [12.954, 77.5178],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_02b10a0f82f66a9fafa265f4b0f97fbe = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f97316;white-space:nowrap;\"\u003eA3\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_e1ba57c16a1395b11488eff164c63b69.setIcon(div_icon_02b10a0f82f66a9fafa265f4b0f97fbe);
+            
+    
+            var marker_9ca9d24ec4a897da6b0aa7864a7879a4 = L.marker(
+                [12.9535, 77.5172],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_0d897e49e616f7d40caf832d790593d6 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f97316;white-space:nowrap;\"\u003eA4\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_9ca9d24ec4a897da6b0aa7864a7879a4.setIcon(div_icon_0d897e49e616f7d40caf832d790593d6);
+            
+    
+            var marker_686394cb9b02868ff69636396175d26b = L.marker(
+                [12.9455, 77.5105],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_374f00e79150cede9e9d5f8f780af2a9 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f97316;white-space:nowrap;\"\u003eA5\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_686394cb9b02868ff69636396175d26b.setIcon(div_icon_374f00e79150cede9e9d5f8f780af2a9);
+            
+    
+            var marker_84ea4b3a3933a84e9319808a085ad5e9 = L.marker(
+                [12.9445, 77.5095],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_c13aeb6a3a18ddc90a86fd3201140294 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f59e0b;white-space:nowrap;\"\u003eA6\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_84ea4b3a3933a84e9319808a085ad5e9.setIcon(div_icon_c13aeb6a3a18ddc90a86fd3201140294);
+            
+    
+            var marker_e15ddbef8cd65f06ecfec202afa570b1 = L.marker(
+                [12.9245, 77.4995],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_1d56e7d492b6b7219d8f3b15893b33ab = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f59e0b;white-space:nowrap;\"\u003eB1\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_e15ddbef8cd65f06ecfec202afa570b1.setIcon(div_icon_1d56e7d492b6b7219d8f3b15893b33ab);
+            
+    
+            var marker_1d34af3555a1ba9b047160d65542c127 = L.marker(
+                [12.9265, 77.5005],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_9582fcd238b68e0d544bb5f74e3489d5 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f97316;white-space:nowrap;\"\u003eB2\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_1d34af3555a1ba9b047160d65542c127.setIcon(div_icon_9582fcd238b68e0d544bb5f74e3489d5);
+            
+    
+            var marker_95ca92e34e725c516ef7539cca25cf14 = L.marker(
+                [12.9235, 77.4988],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_51443ea52d62c1946ffb89186f21107c = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f59e0b;white-space:nowrap;\"\u003eB3\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_95ca92e34e725c516ef7539cca25cf14.setIcon(div_icon_51443ea52d62c1946ffb89186f21107c);
+            
+    
+            var marker_d150fc42e9a00b8fed5bea5d1cfb313c = L.marker(
+                [12.928, 77.502],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_805b495d1c101864f320bb573d4aee01 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f59e0b;white-space:nowrap;\"\u003eB4\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_d150fc42e9a00b8fed5bea5d1cfb313c.setIcon(div_icon_805b495d1c101864f320bb573d4aee01);
+            
+    
+            var marker_5a34d8f7f1b03271a694247c3f460b60 = L.marker(
+                [12.9275, 77.5015],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_d0760549ff65ba3ed29836762eee53c7 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f59e0b;white-space:nowrap;\"\u003eB5\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_5a34d8f7f1b03271a694247c3f460b60.setIcon(div_icon_d0760549ff65ba3ed29836762eee53c7);
+            
+    
+            var marker_931b5cadf56b1f0f82d2a84051684863 = L.marker(
+                [12.9258, 77.5008],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_f8cb6cf89b1ae97c0bca39bd8295f68e = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f59e0b;white-space:nowrap;\"\u003eB6\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_931b5cadf56b1f0f82d2a84051684863.setIcon(div_icon_f8cb6cf89b1ae97c0bca39bd8295f68e);
+            
+    
+            var marker_1eb5a12fbf8f065c78ebc28ecb7c9847 = L.marker(
+                [12.9125, 77.4855],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_268efe21c5f84cda1c98d6f833c614a0 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f59e0b;white-space:nowrap;\"\u003eC1\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_1eb5a12fbf8f065c78ebc28ecb7c9847.setIcon(div_icon_268efe21c5f84cda1c98d6f833c614a0);
+            
+    
+            var marker_cf2fffd46bde652a6b1b77e4c591ed8b = L.marker(
+                [12.9105, 77.4875],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_210bd91b214f7da22fbeb0139c06f63d = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f59e0b;white-space:nowrap;\"\u003eC2\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_cf2fffd46bde652a6b1b77e4c591ed8b.setIcon(div_icon_210bd91b214f7da22fbeb0139c06f63d);
+            
+    
+            var marker_0174fdb690f5613bf5127a0c15f94c5a = L.marker(
+                [12.9055, 77.4805],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_d5495372b80604cc16de409a5d650ee9 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f59e0b;white-space:nowrap;\"\u003eC3\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_0174fdb690f5613bf5127a0c15f94c5a.setIcon(div_icon_d5495372b80604cc16de409a5d650ee9);
+            
+    
+            var marker_c7c704cc0d6d4dec8da4f9410b0d43b8 = L.marker(
+                [12.908, 77.483],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_a8fb1aa3d97bb4de2018605beb176e32 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #22c55e;white-space:nowrap;\"\u003eC4\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_c7c704cc0d6d4dec8da4f9410b0d43b8.setIcon(div_icon_a8fb1aa3d97bb4de2018605beb176e32);
+            
+    
+            var marker_e7b1d18ee001ddbe452491eca6d4825a = L.marker(
+                [12.9075, 77.4825],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_72b23e282dc5b39320af631fd183b9c2 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #f59e0b;white-space:nowrap;\"\u003eC5\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_e7b1d18ee001ddbe452491eca6d4825a.setIcon(div_icon_72b23e282dc5b39320af631fd183b9c2);
+            
+    
+            var marker_7664f60471fab0089546c173dd03f036 = L.marker(
+                [12.97, 77.535],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_efe8242e8d52c06e7a910052ffba48ba = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #22c55e;white-space:nowrap;\"\u003eN1\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_7664f60471fab0089546c173dd03f036.setIcon(div_icon_efe8242e8d52c06e7a910052ffba48ba);
+            
+    
+            var marker_9dcfecc50db0ba735fcdf36500e8c68f = L.marker(
+                [12.93, 77.46],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_813b7ac4d22131d2a1e81478dbce93f1 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #22c55e;white-space:nowrap;\"\u003eN2\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_9dcfecc50db0ba735fcdf36500e8c68f.setIcon(div_icon_813b7ac4d22131d2a1e81478dbce93f1);
+            
+    
+            var marker_7b8cc074ad68fc66526e63655776c29b = L.marker(
+                [12.95, 77.47],
+                {
+}
+            ).addTo(feature_group_6ebdad307fecf91ed95e7860cda34018);
+        
+    
+            var div_icon_1576c2f3030ab3d6905110e8d777596d = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;font-weight:bold;color:#1e293b;background:white;padding:1px 4px;border-radius:3px;border:1px solid #22c55e;white-space:nowrap;\"\u003eN3\u003c/div\u003e",
+  "iconSize": [30, 15],
+  "iconAnchor": [15, -10],
+  "className": "empty",
+});
+        
+    
+                marker_7b8cc074ad68fc66526e63655776c29b.setIcon(div_icon_1576c2f3030ab3d6905110e8d777596d);
+            
+    
+            feature_group_6ebdad307fecf91ed95e7860cda34018.addTo(map_5bc0c6b8f36d7a02ca396586f1a3df17);
+        
+    
+            var layer_control_c14d3493bbc5eefad8a5064b55073e4b_layers = {
+                base_layers : {
+                    "openstreetmap" : tile_layer_4c4991b66c56900f6c5de4590eb3c7f7,
+                    "Satellite View" : tile_layer_6c74a95f199775dd25a5efe66a2bb193,
+                },
+                overlays :  {
+                    "Sampling Points" : feature_group_be97df4914b98ffd66c0742cf970af40,
+                    "Sample Labels" : feature_group_6ebdad307fecf91ed95e7860cda34018,
+                },
+            };
+            let layer_control_c14d3493bbc5eefad8a5064b55073e4b = L.control.layers(
+                layer_control_c14d3493bbc5eefad8a5064b55073e4b_layers.base_layers,
+                layer_control_c14d3493bbc5eefad8a5064b55073e4b_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": true,
+  "autoZIndex": true,
+}
+            ).addTo(map_5bc0c6b8f36d7a02ca396586f1a3df17);
+
+        
+</script>
+</html>

@@ -1,52 +1,81 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { fetchLatest } from '../api'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { fetchLatest, postSourceAnalysis } from '../api'
 
-const PARAMS = ['Nitrate', 'TDS', 'Turbidity', 'Phosphate', 'Heavy Metals']
-const SOURCES = ['Factory', 'Farm', 'Sewage', 'Landfill']
-const SRC_COLORS = { Factory: '#ff4455', Farm: '#44cc66', Sewage: '#ffaa00', Landfill: '#bb66ff' }
-
-/* Fingerprint vectors (0-100 scale) */
-const FINGERPRINTS = {
-  Factory:  [40, 85, 70, 20, 95],
-  Farm:     [95, 45, 50, 80, 15],
-  Sewage:   [60, 70, 80, 55, 25],
-  Landfill: [30, 55, 40, 35, 80],
+const SRC_COLORS = {
+  'Industrial Discharge': '#e74c3c',
+  'Sewage Contamination': '#8B4513',
+  'Agricultural Runoff': '#27ae60',
+  'Solid Waste Leachate': '#7f8c8d',
 }
 
-const DESCRIPTIONS = {
-  Factory: 'Industrial plants discharge heavy metals (lead, mercury, chromium) from manufacturing processes. Thermal pollution raises water temperature. Solvents and acids lower pH and increase TDS significantly.',
-  Farm: 'Farms apply nitrogen-based fertilisers — nitrate leaches into groundwater and flows into rivers during rain events. Phosphate from animal manure causes eutrophication. Pesticide residues add organic pollutants.',
-  Sewage: 'Sewage treatment plants release partially treated wastewater containing ammonia, pathogens, and suspended solids. High BOD depletes dissolved oxygen. Turbidity is elevated from organic particulates.',
-  Landfill: 'Landfill leachate contains dissolved heavy metals from batteries and electronics, plus microplastics. Methane production indicates anaerobic decomposition. TDS is moderately elevated from mineral dissolution.',
-}
+// Radar axes — the 3 real measured parameters the source engine uses
+const AXES = [
+  { key: 'tds', label: 'TDS', max: 1000 },
+  { key: 'turbidity', label: 'Turbidity', max: 50 },
+  { key: 'ph', label: 'pH', max: 14 },
+]
 
-/* Cosine similarity */
-function cosineSim(a, b) {
-  let dot = 0, magA = 0, magB = 0
-  for (let i = 0; i < a.length; i++) { dot += a[i] * b[i]; magA += a[i] * a[i]; magB += b[i] * b[i] }
-  return magA && magB ? dot / (Math.sqrt(magA) * Math.sqrt(magB)) : 0
-}
-
-/* Interpolate between two arrays */
 function lerp(a, b, t) { return a.map((v, i) => v + (b[i] - v) * t) }
 
 export default function PollutionDNA() {
-  const [selected, setSelected] = useState('Factory')
-  const [radarValues, setRadarValues] = useState(FINGERPRINTS.Factory)
-  const animRef = useRef(null)
-  const prevRef = useRef(FINGERPRINTS.Factory)
   const [live, setLive] = useState(null)
+  const [analysis, setAnalysis] = useState(null)
+  const [selected, setSelected] = useState(null)
+  const [radarValues, setRadarValues] = useState([0, 0, 0])
+  const animRef = useRef(null)
+  const prevRef = useRef([0, 0, 0])
 
+  // Poll live reading
   useEffect(() => {
     const load = () => fetchLatest().then(d => setLive(d?.reading)).catch(() => {})
-    load(); const id = setInterval(load, 3000); return () => clearInterval(id)
+    load()
+    const id = setInterval(load, 3000)
+    return () => clearInterval(id)
   }, [])
 
-  /* Animate radar morph */
-  const morphTo = useCallback((src) => {
-    setSelected(src)
+  // Run real source fingerprint when reading changes
+  useEffect(() => {
+    if (!live || live.tds == null) return
+    postSourceAnalysis({
+      tds: live.tds,
+      turbidity: live.turbidity || 0,
+      ph: live.ph || 7.0,
+      temperature: live.temperature || 25,
+    }).then(r => {
+      if (r.status === 'ok') {
+        setAnalysis(r)
+        if (!selected) setSelected(r.source)
+      }
+    }).catch(() => {})
+  }, [live?.tds, live?.turbidity, live?.ph])
+
+  const profiles = analysis?.profiles || {}
+  const scores = analysis?.scores || {}
+  const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1])
+
+  // Profile centroid → normalized radar vector [0,1]
+  const profileVec = useCallback((label) => {
+    const p = profiles[label]
+    if (!p) return [0, 0, 0]
+    return [
+      Math.min(1, p.tds_center / 1000),
+      Math.min(1, p.turbidity_center / 50),
+      Math.min(1, p.ph_center / 14),
+    ]
+  }, [profiles])
+
+  // Live reading normalized radar vector
+  const liveVec = live ? [
+    Math.min(1, (live.tds || 0) / 1000),
+    Math.min(1, (live.turbidity || 0) / 50),
+    Math.min(1, (live.ph || 7) / 14),
+  ] : [0, 0, 0]
+
+  // Animate radar morph to selected profile
+  useEffect(() => {
+    if (!selected || !profiles[selected]) return
     const from = prevRef.current.slice()
-    const to = FINGERPRINTS[src]
+    const to = profileVec(selected)
     const t0 = Date.now()
     const dur = 600
     const step = () => {
@@ -58,134 +87,186 @@ export default function PollutionDNA() {
     }
     if (animRef.current) cancelAnimationFrame(animRef.current)
     animRef.current = requestAnimationFrame(step)
-  }, [])
+    return () => { if (animRef.current) cancelAnimationFrame(animRef.current) }
+  }, [selected, profiles])
 
-  /* Build sensor vector from live data for matching */
-  const sensorVec = live ? [
-    Math.min(100, (live.nitrate || 0) * 3),
-    Math.min(100, (live.tds || 0) / 10),
-    Math.min(100, (live.turbidity || 0) * 20),
-    Math.min(100, (live.nitrate || 0) * 1.5), // phosphate proxy
-    Math.min(100, (live.tds || 0) / 12),       // heavy metal proxy
-  ] : [50, 50, 50, 50, 50]
-
-  const matches = SOURCES.map(s => ({ name: s, score: cosineSim(sensorVec, FINGERPRINTS[s]) })).sort((a, b) => b.score - a.score)
-  const bestMatch = matches[0]
-
-  /* Radar polygon points */
-  const radarPoly = radarValues.map((v, i) => {
-    const angle = (i / 5) * Math.PI * 2 - Math.PI / 2
-    const r = (v / 100) * 85
-    return `${120 + r * Math.cos(angle)},${105 + r * Math.sin(angle)}`
+  // Radar polygon helper
+  const CX = 130, CY = 120, R = 85
+  const polyPoints = (vec) => vec.map((v, i) => {
+    const angle = (i / AXES.length) * Math.PI * 2 - Math.PI / 2
+    const r = v * R
+    return `${CX + r * Math.cos(angle)},${CY + r * Math.sin(angle)}`
   }).join(' ')
 
-  /* Heatmap color: dark → cyan */
-  const heatColor = (v) => {
-    const t = v / 100
-    const r = Math.round(10 + t * 0), g = Math.round(15 + t * 200), b = Math.round(25 + t * 240)
-    return `rgb(${r},${g},${b})`
-  }
+  const bestMatch = sortedScores[0]
+  const selColor = SRC_COLORS[selected] || 'var(--accent)'
 
   return (
     <div className="page-fade">
       <div className="page-header">
         <h2>Pollution DNA</h2>
-        <p>Chemical fingerprinting — every source leaves a unique signature</p>
+        <p>Chemical fingerprinting — live reading matched against source profiles via z-score distance (BIS-derived source engine)</p>
       </div>
 
-      {/* Heatmap */}
-      <div style={{ background: '#0d1117', border: '1px solid #1a2332', borderRadius: 12, padding: 20, marginBottom: 20 }}>
-        <div style={{ fontSize: 10, color: '#333', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 14 }}>Spectrogram — Click a source column</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '100px repeat(4, 1fr)', gap: 3 }}>
-          {/* Header row */}
-          <div />
-          {SOURCES.map(s => (
-            <div key={s} onClick={() => morphTo(s)}
-              style={{ textAlign: 'center', fontSize: 11, fontWeight: selected === s ? 700 : 400, color: selected === s ? SRC_COLORS[s] : '#555', cursor: 'pointer', padding: '6px 0', borderBottom: selected === s ? `2px solid ${SRC_COLORS[s]}` : '2px solid transparent', transition: 'all 0.3s' }}>
-              {s}
-            </div>
-          ))}
-          {/* Data rows */}
-          {PARAMS.map((p, pi) => (
-            <React.Fragment key={p}>
-              <div style={{ fontSize: 10, color: '#555', display: 'flex', alignItems: 'center', paddingRight: 8 }}>{p}</div>
-              {SOURCES.map(s => {
-                const v = FINGERPRINTS[s][pi]
-                return (
-                  <div key={`${s}-${p}`} onClick={() => morphTo(s)}
-                    style={{ background: heatColor(v), height: 36, borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.4s', border: selected === s ? `1px solid ${SRC_COLORS[s]}40` : '1px solid transparent' }}>
-                    <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: v > 50 ? '#fff' : '#556', fontWeight: 500 }}>{v}</span>
-                  </div>
-                )
-              })}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
+      {!analysis && (
+        <div className="loading">Waiting for live sensor reading...</div>
+      )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        {/* Morphing Radar Chart */}
-        <div style={{ background: '#0d1117', border: '1px solid #1a2332', borderRadius: 12, padding: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: SRC_COLORS[selected], marginBottom: 4 }}>{selected} Fingerprint</div>
-          <div style={{ fontSize: 11, color: '#555', lineHeight: 1.6, marginBottom: 16 }}>{DESCRIPTIONS[selected]}</div>
-          <svg viewBox="0 0 240 220" style={{ width: '100%', maxWidth: 320, display: 'block', margin: '0 auto' }}>
-            {/* Grid rings */}
-            {[20, 40, 60, 80].map(r => (
-              <circle key={r} cx="120" cy="105" r={r * 0.85} fill="none" stroke="#1a2332" strokeWidth="0.5" />
-            ))}
-            {/* Axis lines + labels */}
-            {PARAMS.map((p, i) => {
-              const angle = (i / 5) * Math.PI * 2 - Math.PI / 2
-              const lx = 120 + 95 * Math.cos(angle), ly = 105 + 95 * Math.sin(angle)
-              return (
-                <g key={p}>
-                  <line x1="120" y1="105" x2={120 + 85 * Math.cos(angle)} y2={105 + 85 * Math.sin(angle)} stroke="#1a2332" strokeWidth="0.5" />
-                  <text x={lx} y={ly + 3} textAnchor="middle" fill="#444" fontSize="8" fontFamily="Inter">{p}</text>
-                </g>
-              )
-            })}
-            {/* Filled polygon */}
-            <polygon points={radarPoly} fill={SRC_COLORS[selected]} fillOpacity="0.15" stroke={SRC_COLORS[selected]} strokeWidth="1.5" />
-            {/* Value dots */}
-            {radarValues.map((v, i) => {
-              const angle = (i / 5) * Math.PI * 2 - Math.PI / 2
-              const r = (v / 100) * 85
-              return <circle key={i} cx={120 + r * Math.cos(angle)} cy={105 + r * Math.sin(angle)} r="3" fill={SRC_COLORS[selected]} />
-            })}
-          </svg>
-        </div>
-
-        {/* Match Score Panel */}
-        <div style={{ background: '#0d1117', border: '1px solid #1a2332', borderRadius: 12, padding: 20 }}>
-          <div style={{ fontSize: 10, color: '#333', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 14 }}>Source Match — Live Sensor vs Fingerprints</div>
-          {matches.map((m, i) => {
-            const pct = (m.score * 100).toFixed(1)
-            const isBest = i === 0
-            const col = SRC_COLORS[m.name]
-            return (
-              <div key={m.name} style={{ marginBottom: 14 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, fontWeight: isBest ? 700 : 400, color: isBest ? col : '#888' }}>{m.name}</span>
-                  <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: isBest ? col : '#555' }}>
-                    {pct}%{isBest && <span style={{ marginLeft: 8, fontSize: 9, background: col + '20', color: col, padding: '2px 6px', borderRadius: 3 }}>BEST MATCH</span>}
-                  </span>
-                </div>
-                <div style={{ height: 8, background: '#151a28', borderRadius: 4, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', borderRadius: 4, background: isBest ? col : '#333', width: `${pct}%`, transition: 'width 1s cubic-bezier(0.34, 1.56, 0.64, 1)', boxShadow: isBest ? `0 0 8px ${col}40` : 'none' }} />
-                </div>
+      {analysis && (
+        <>
+          {/* Best match banner */}
+          <div style={{
+            background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12,
+            padding: '16px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 20,
+            borderLeft: `4px solid ${SRC_COLORS[analysis.source] || 'var(--accent)'}`,
+          }}>
+            <div>
+              <div style={{ fontSize: 9, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Closest Match</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: SRC_COLORS[analysis.source] || 'var(--accent)' }}>
+                {analysis.source}
+                {analysis.ambiguous && <span style={{ color: '#d4a017', fontSize: 11, marginLeft: 8 }}>AMBIGUOUS</span>}
               </div>
-            )
-          })}
-          <div style={{ marginTop: 20, padding: 12, background: '#0a0e16', borderRadius: 8, border: `1px solid ${SRC_COLORS[bestMatch.name]}20` }}>
-            <div style={{ fontSize: 10, color: '#333', marginBottom: 4 }}>LIVE SENSOR VECTOR</div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {PARAMS.map((p, i) => (
-                <span key={p} style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: '#666', background: '#151a28', padding: '2px 6px', borderRadius: 3 }}>{p}: {sensorVec[i].toFixed(0)}</span>
-              ))}
+              <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{analysis.description}</div>
+            </div>
+            <div style={{ marginLeft: 'auto', textAlign: 'center' }}>
+              <div style={{ fontSize: 26, fontWeight: 700, fontFamily: 'var(--font-mono)', color: SRC_COLORS[analysis.source] || 'var(--accent)' }}>
+                {(analysis.confidence * 100).toFixed(0)}%
+              </div>
+              <div style={{ fontSize: 9, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Confidence</div>
             </div>
           </div>
-        </div>
-      </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 16 }}>
+            {/* Radar */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                Signature — {selected}
+              </div>
+              <svg viewBox="0 0 260 230" style={{ width: '100%' }}>
+                {/* Grid rings */}
+                {[0.33, 0.66, 1].map((g, i) => (
+                  <polygon key={i}
+                    points={polyPoints([g, g, g])}
+                    fill="none" stroke="var(--border)" strokeWidth="1" opacity="0.5" />
+                ))}
+                {/* Axes */}
+                {AXES.map((ax, i) => {
+                  const angle = (i / AXES.length) * Math.PI * 2 - Math.PI / 2
+                  const x = CX + R * Math.cos(angle)
+                  const y = CY + R * Math.sin(angle)
+                  return (
+                    <g key={ax.key}>
+                      <line x1={CX} y1={CY} x2={x} y2={y} stroke="var(--border)" strokeWidth="1" opacity="0.5" />
+                      <text x={CX + (R + 18) * Math.cos(angle)} y={CY + (R + 18) * Math.sin(angle) + 4}
+                        textAnchor="middle" fontSize="10" fill="var(--text-muted)" fontFamily="var(--font-mono)">{ax.label}</text>
+                    </g>
+                  )
+                })}
+                {/* Profile polygon (selected source) */}
+                <polygon points={polyPoints(radarValues)}
+                  fill={selColor} fillOpacity="0.18" stroke={selColor} strokeWidth="2" />
+                {/* Live reading polygon */}
+                <polygon points={polyPoints(liveVec)}
+                  fill="#2090b0" fillOpacity="0.12" stroke="#2090b0" strokeWidth="2" strokeDasharray="4 3" />
+              </svg>
+              <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 4 }}>
+                <span style={{ fontSize: 10, color: selColor }}>■ {selected}</span>
+                <span style={{ fontSize: 10, color: '#2090b0' }}>▢ Live reading</span>
+              </div>
+            </div>
+
+            {/* Scores + evidence */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Match scores */}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+                  Source Similarity (z-score → normalized)
+                </div>
+                {sortedScores.map(([label, score], i) => (
+                  <div key={label}
+                    onClick={() => setSelected(label)}
+                    className="source-bar-row"
+                    style={{ cursor: 'pointer', opacity: selected === label ? 1 : 0.7 }}>
+                    <span className="source-bar-label">{label}</span>
+                    <div className="source-bar-track">
+                      <div className="source-bar-fill"
+                        style={{ width: `${score * 100}%`, background: SRC_COLORS[label] || 'var(--accent)' }} />
+                    </div>
+                    <span className="source-bar-value">{(score * 100).toFixed(0)}%</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Live parameters */}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+                  Live Reading vs {selected} Profile
+                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                      {['Parameter', 'Measured', `${selected} Center`].map(h => (
+                        <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 9, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 500 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ['TDS', live?.tds?.toFixed(0), profiles[selected]?.tds_center, 'ppm'],
+                      ['Turbidity', live?.turbidity?.toFixed(1), profiles[selected]?.turbidity_center, 'NTU'],
+                      ['pH', live?.ph?.toFixed(1), profiles[selected]?.ph_center, ''],
+                    ].map(([label, meas, center, unit]) => (
+                      <tr key={label} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '5px 8px', color: 'var(--text-secondary)' }}>{label}</td>
+                        <td style={{ padding: '5px 8px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontWeight: 600 }}>{meas} {unit}</td>
+                        <td style={{ padding: '5px 8px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>{center} {unit}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Chemical evidence */}
+              {analysis.chemical_evidence?.length > 0 && (
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                    Chemical Evidence ({analysis.source})
+                  </div>
+                  {analysis.chemical_evidence.map((e, i) => (
+                    <div key={i} style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4, paddingLeft: 10, borderLeft: `2px solid ${SRC_COLORS[analysis.source] || 'var(--accent)'}` }}>{e}</div>
+                  ))}
+                  {analysis.ambiguous && analysis.ambiguity_note && (
+                    <div style={{ fontSize: 10, color: '#d4a017', marginTop: 8 }}>{analysis.ambiguity_note}</div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Source descriptions */}
+          <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
+            {Object.entries(profiles).map(([label, p]) => (
+              <div key={label}
+                onClick={() => setSelected(label)}
+                style={{
+                  background: 'var(--bg-card)',
+                  border: `1px solid ${selected === label ? (SRC_COLORS[label] || 'var(--accent)') : 'var(--border)'}`,
+                  borderRadius: 10, padding: 14, cursor: 'pointer', transition: 'border-color 0.2s',
+                }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: SRC_COLORS[label] || 'var(--accent)', marginBottom: 4 }}>{label}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.5 }}>{p.description}</div>
+                <div style={{ fontSize: 9, color: 'var(--text-faint)', marginTop: 6, fontFamily: 'var(--font-mono)' }}>
+                  TDS {p.tds_center} · Turb {p.turbidity_center} · pH {p.ph_center}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: 12, fontSize: 10, color: 'var(--text-muted)', fontStyle: 'italic', lineHeight: 1.5 }}>
+            {analysis.methodology_note}
+          </div>
+        </>
+      )}
     </div>
   )
 }

@@ -27,9 +27,9 @@ class DataSimulator:
     smoothing / ML behaves realistically.
     """
 
-    # ── Base GPS location (Bangalore, India) ──────────────────────────
-    BASE_LAT = 12.9716
-    BASE_LON = 77.5946
+    # ── Base GPS location (RVCE, Bangalore) ────────────────────────────
+    BASE_LAT = 12.9240
+    BASE_LON = 77.4990
 
     def __init__(self, seed: int | None = None):
         """

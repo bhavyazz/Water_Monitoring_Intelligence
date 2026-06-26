@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_66d8b6f5d72c2eea5a546e4ee61010ba {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+    <div style="position:fixed; bottom:30px; left:30px; z-index:1000;
+         background:white; padding:12px 16px; border-radius:8px;
+         box-shadow:0 2px 8px rgba(0,0,0,0.15); font-family:Arial; font-size:12px;">
+        <b>Water Body Network</b><br>
+        <span style="color:#3b82f6;">&#9679;</span> River<br>
+        <span style="color:#f97316;">&#9679;</span> Drain/Nala<br>
+        <span style="color:#8b5cf6;">&#9679;</span> Pond/Lake<br>
+        <span style="color:#10b981;">&#9679;</span> Canal/Channel<br>
+        <br><span style="color:#3b82f6;">- - -</span> Connection (with distance)<br>
+        <br><i>Network mapped from OpenStreetMap<br>and Google Maps satellite imagery</i>
+    </div>
+    
+    
+            <div class="folium-map" id="map_66d8b6f5d72c2eea5a546e4ee61010ba" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_66d8b6f5d72c2eea5a546e4ee61010ba = L.map(
+                "map_66d8b6f5d72c2eea5a546e4ee61010ba",
+                {
+                    center: [12.92311111111111, 77.49555555555555],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 13,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_2ad5c8994cd7cb49f87e1960995d961d = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_2ad5c8994cd7cb49f87e1960995d961d.addTo(map_66d8b6f5d72c2eea5a546e4ee61010ba);
+        
+    
+            var tile_layer_b84c19ab9511305f23fbe627105a2ca5 = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Esri World Imagery",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_b84c19ab9511305f23fbe627105a2ca5.addTo(map_66d8b6f5d72c2eea5a546e4ee61010ba);
+        
+    
+            var feature_group_01a326454760c9f3f8b17f783cea9041 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var poly_line_65296e0e51a9b89d821c51d10cccd8f8 = L.polyline(
+                [[12.955, 77.518], [12.945, 77.51]],
+                {"bubblingMouseEvents": true, "color": "#3b82f6", "dashArray": "10 5", "dashOffset": null, "fill": false, "fillColor": "#3b82f6", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.7, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            poly_line_65296e0e51a9b89d821c51d10cccd8f8.bindTooltip(
+                `<div>
+                     Vrushabavathi at Nayandahalli <-> Vrushabavathi at Mysore Road Bridge (1.2 km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_ef8ce6d307f407d7efb1e39ef6f6ab77 = L.marker(
+                [12.95, 77.51400000000001],
+                {
+}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            var div_icon_f4b1cdeaddb4ac151af2534b7a353456 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#3b82f6;font-weight:bold;background:rgba(255,255,255,0.9);padding:1px 4px;border-radius:3px;\"\u003e1.2 km\u003c/div\u003e",
+  "iconSize": [50, 15],
+  "iconAnchor": [25, 7],
+  "className": "empty",
+});
+        
+    
+                marker_ef8ce6d307f407d7efb1e39ef6f6ab77.setIcon(div_icon_f4b1cdeaddb4ac151af2534b7a353456);
+            
+    
+            var poly_line_7a2eb95f215b53d4e5631643f83c8673 = L.polyline(
+                [[12.945, 77.51], [12.924, 77.499]],
+                {"bubblingMouseEvents": true, "color": "#3b82f6", "dashArray": "10 5", "dashOffset": null, "fill": false, "fillColor": "#3b82f6", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.7, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            poly_line_7a2eb95f215b53d4e5631643f83c8673.bindTooltip(
+                `<div>
+                     Vrushabavathi at Mysore Road Bridge <-> Vrushabavathi near RVCE (2.5 km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_07cf45b274e283eaa5b12677ff020373 = L.marker(
+                [12.9345, 77.50450000000001],
+                {
+}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            var div_icon_f0436d499e0a5741603079eca07a03bc = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#3b82f6;font-weight:bold;background:rgba(255,255,255,0.9);padding:1px 4px;border-radius:3px;\"\u003e2.5 km\u003c/div\u003e",
+  "iconSize": [50, 15],
+  "iconAnchor": [25, 7],
+  "className": "empty",
+});
+        
+    
+                marker_07cf45b274e283eaa5b12677ff020373.setIcon(div_icon_f0436d499e0a5741603079eca07a03bc);
+            
+    
+            var poly_line_26b8c5299eeeb6232a7611000734e767 = L.polyline(
+                [[12.924, 77.499], [12.927, 77.501]],
+                {"bubblingMouseEvents": true, "color": "#3b82f6", "dashArray": "10 5", "dashOffset": null, "fill": false, "fillColor": "#3b82f6", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.7, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            poly_line_26b8c5299eeeb6232a7611000734e767.bindTooltip(
+                `<div>
+                     Vrushabavathi near RVCE <-> Campus Drain (RVCE-BU Nala) (0.3 km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_11df9afeb60917c9ebc80001d66e0ecc = L.marker(
+                [12.9255, 77.5],
+                {
+}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            var div_icon_2827b28abf15726a95230e81b9db9c66 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#3b82f6;font-weight:bold;background:rgba(255,255,255,0.9);padding:1px 4px;border-radius:3px;\"\u003e0.3 km\u003c/div\u003e",
+  "iconSize": [50, 15],
+  "iconAnchor": [25, 7],
+  "className": "empty",
+});
+        
+    
+                marker_11df9afeb60917c9ebc80001d66e0ecc.setIcon(div_icon_2827b28abf15726a95230e81b9db9c66);
+            
+    
+            var poly_line_12766529c2f2788b097dddb51dd63833 = L.polyline(
+                [[12.924, 77.499], [12.912, 77.485]],
+                {"bubblingMouseEvents": true, "color": "#3b82f6", "dashArray": "10 5", "dashOffset": null, "fill": false, "fillColor": "#3b82f6", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.7, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            poly_line_12766529c2f2788b097dddb51dd63833.bindTooltip(
+                `<div>
+                     Vrushabavathi near RVCE <-> Vrushabavathi at Kengeri (1.5 km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_c689ef1d1eeaae50a884cd672d357dca = L.marker(
+                [12.918, 77.49199999999999],
+                {
+}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            var div_icon_1908f36b2dd79c14e9c9d2ef6361d638 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#3b82f6;font-weight:bold;background:rgba(255,255,255,0.9);padding:1px 4px;border-radius:3px;\"\u003e1.5 km\u003c/div\u003e",
+  "iconSize": [50, 15],
+  "iconAnchor": [25, 7],
+  "className": "empty",
+});
+        
+    
+                marker_c689ef1d1eeaae50a884cd672d357dca.setIcon(div_icon_1908f36b2dd79c14e9c9d2ef6361d638);
+            
+    
+            var poly_line_ee78dda8725f66cd92fc2899ca0783ad = L.polyline(
+                [[12.927, 77.501], [12.935, 77.505]],
+                {"bubblingMouseEvents": true, "color": "#3b82f6", "dashArray": "10 5", "dashOffset": null, "fill": false, "fillColor": "#3b82f6", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.7, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            poly_line_ee78dda8725f66cd92fc2899ca0783ad.bindTooltip(
+                `<div>
+                     Campus Drain (RVCE-BU Nala) <-> Jnana Bharathi Lake (0.5 km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_2e42610b204aafa57c50d89d48e7795a = L.marker(
+                [12.931000000000001, 77.503],
+                {
+}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            var div_icon_998e22598f9a75958545be05ed21bb55 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#3b82f6;font-weight:bold;background:rgba(255,255,255,0.9);padding:1px 4px;border-radius:3px;\"\u003e0.5 km\u003c/div\u003e",
+  "iconSize": [50, 15],
+  "iconAnchor": [25, 7],
+  "className": "empty",
+});
+        
+    
+                marker_2e42610b204aafa57c50d89d48e7795a.setIcon(div_icon_998e22598f9a75958545be05ed21bb55);
+            
+    
+            var poly_line_36fa72e8765c787de92a7c986a98c1ca = L.polyline(
+                [[12.912, 77.485], [12.91, 77.487]],
+                {"bubblingMouseEvents": true, "color": "#3b82f6", "dashArray": "10 5", "dashOffset": null, "fill": false, "fillColor": "#3b82f6", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.7, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            poly_line_36fa72e8765c787de92a7c986a98c1ca.bindTooltip(
+                `<div>
+                     Vrushabavathi at Kengeri <-> Kengeri Village Pond (0.4 km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_e58a879d49fb6709b901724a9fc1658c = L.marker(
+                [12.911000000000001, 77.48599999999999],
+                {
+}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            var div_icon_5a11ba808177404889fdbd829c9888e8 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#3b82f6;font-weight:bold;background:rgba(255,255,255,0.9);padding:1px 4px;border-radius:3px;\"\u003e0.4 km\u003c/div\u003e",
+  "iconSize": [50, 15],
+  "iconAnchor": [25, 7],
+  "className": "empty",
+});
+        
+    
+                marker_e58a879d49fb6709b901724a9fc1658c.setIcon(div_icon_5a11ba808177404889fdbd829c9888e8);
+            
+    
+            var poly_line_3197c5371f44cd01161d2f2066d64b88 = L.polyline(
+                [[12.912, 77.485], [12.895, 77.475]],
+                {"bubblingMouseEvents": true, "color": "#3b82f6", "dashArray": "10 5", "dashOffset": null, "fill": false, "fillColor": "#3b82f6", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.7, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            poly_line_3197c5371f44cd01161d2f2066d64b88.bindTooltip(
+                `<div>
+                     Vrushabavathi at Kengeri <-> Kommaghatta Lake (2.0 km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_c61c8ce72393785148c1fe351ceb5373 = L.marker(
+                [12.903500000000001, 77.47999999999999],
+                {
+}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            var div_icon_c23e33c267c6bb39e2bb0fea10e6affc = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#3b82f6;font-weight:bold;background:rgba(255,255,255,0.9);padding:1px 4px;border-radius:3px;\"\u003e2.0 km\u003c/div\u003e",
+  "iconSize": [50, 15],
+  "iconAnchor": [25, 7],
+  "className": "empty",
+});
+        
+    
+                marker_c61c8ce72393785148c1fe351ceb5373.setIcon(div_icon_c23e33c267c6bb39e2bb0fea10e6affc);
+            
+    
+            var poly_line_512ec7aa66ab0dbf91d944bebe3e76cd = L.polyline(
+                [[12.905, 77.48], [12.912, 77.485]],
+                {"bubblingMouseEvents": true, "color": "#3b82f6", "dashArray": "10 5", "dashOffset": null, "fill": false, "fillColor": "#3b82f6", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.7, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            poly_line_512ec7aa66ab0dbf91d944bebe3e76cd.bindTooltip(
+                `<div>
+                     Kengeri Agricultural Canal <-> Vrushabavathi at Kengeri (0.8 km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_6d0e9273910f703504312c932561ba4e = L.marker(
+                [12.9085, 77.4825],
+                {
+}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            var div_icon_5d7fd9997d16b3151e267b38fda3877d = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#3b82f6;font-weight:bold;background:rgba(255,255,255,0.9);padding:1px 4px;border-radius:3px;\"\u003e0.8 km\u003c/div\u003e",
+  "iconSize": [50, 15],
+  "iconAnchor": [25, 7],
+  "className": "empty",
+});
+        
+    
+                marker_6d0e9273910f703504312c932561ba4e.setIcon(div_icon_5d7fd9997d16b3151e267b38fda3877d);
+            
+    
+            var poly_line_f4225fa2fb8212f6604c14b34582b8fe = L.polyline(
+                [[12.905, 77.48], [12.895, 77.475]],
+                {"bubblingMouseEvents": true, "color": "#3b82f6", "dashArray": "10 5", "dashOffset": null, "fill": false, "fillColor": "#3b82f6", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.7, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            poly_line_f4225fa2fb8212f6604c14b34582b8fe.bindTooltip(
+                `<div>
+                     Kengeri Agricultural Canal <-> Kommaghatta Lake (0.6 km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_65393c492d74b4fdb839940129df2927 = L.marker(
+                [12.899999999999999, 77.47749999999999],
+                {
+}
+            ).addTo(feature_group_01a326454760c9f3f8b17f783cea9041);
+        
+    
+            var div_icon_51366a1560afd39c437e699a9dbe8da9 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#3b82f6;font-weight:bold;background:rgba(255,255,255,0.9);padding:1px 4px;border-radius:3px;\"\u003e0.6 km\u003c/div\u003e",
+  "iconSize": [50, 15],
+  "iconAnchor": [25, 7],
+  "className": "empty",
+});
+        
+    
+                marker_65393c492d74b4fdb839940129df2927.setIcon(div_icon_51366a1560afd39c437e699a9dbe8da9);
+            
+    
+            feature_group_01a326454760c9f3f8b17f783cea9041.addTo(map_66d8b6f5d72c2eea5a546e4ee61010ba);
+        
+    
+            var feature_group_62273761af4d5c760ef9c03d90807ec2 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var marker_4c5494a378518f5ebf2d6ca78f7603e4 = L.marker(
+                [12.955, 77.518],
+                {
+}
+            ).addTo(feature_group_62273761af4d5c760ef9c03d90807ec2);
+        
+    
+            var icon_9939f047ddaa1763eeb2c744eaca8b90 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "water",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_eb3659af2805664cd44ad75effb9120d = L.popup({
+  "maxWidth": 320,
+});
+
+        
+            
+                var html_192cb3957b0e9f1136abf35797896910 = $(`<div id="html_192cb3957b0e9f1136abf35797896910" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial; min-width:250px;">             <h4 style="margin:0 0 6px 0;">Vrushabavathi at Nayandahalli</h4>             <p style="margin:2px 0;"><b>Type:</b> River</p>             <p style="margin:2px 0;"><b>GPS:</b> 12.9550, 77.5180</p>             <p style="margin:2px 0;"><b>ID:</b> vrushabavathi_nayandahalli</p>             <p style="font-size:11px;color:#64748b;margin:6px 0 0 0;">Upstream segment through industrial zone; receives factory effluents</p>             <p style="margin:4px 0;"><b>Connected to:</b></p>             <ul style="margin:0;padding-left:18px;font-size:12px;">         <li>Vrushabavathi at Mysore Road Bridge (1.2 km)</li></ul></div></div>`)[0];
+                popup_eb3659af2805664cd44ad75effb9120d.setContent(html_192cb3957b0e9f1136abf35797896910);
+            
+        
+
+        marker_4c5494a378518f5ebf2d6ca78f7603e4.bindPopup(popup_eb3659af2805664cd44ad75effb9120d)
+        ;
+
+        
+    
+    
+            marker_4c5494a378518f5ebf2d6ca78f7603e4.bindTooltip(
+                `<div>
+                     Vrushabavathi at Nayandahalli (river)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_4c5494a378518f5ebf2d6ca78f7603e4.setIcon(icon_9939f047ddaa1763eeb2c744eaca8b90);
+            
+    
+            var marker_8863611f39858cd3d988bed486c2466d = L.marker(
+                [12.945, 77.51],
+                {
+}
+            ).addTo(feature_group_62273761af4d5c760ef9c03d90807ec2);
+        
+    
+            var icon_0b06992e189e83b494a7785aa343f4b1 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "water",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_e5a28f68f30528f0dab2f124c3e182ac = L.popup({
+  "maxWidth": 320,
+});
+
+        
+            
+                var html_7d660e6bcbb4fffa00829a5a7622dd4c = $(`<div id="html_7d660e6bcbb4fffa00829a5a7622dd4c" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial; min-width:250px;">             <h4 style="margin:0 0 6px 0;">Vrushabavathi at Mysore Road Bridge</h4>             <p style="margin:2px 0;"><b>Type:</b> River</p>             <p style="margin:2px 0;"><b>GPS:</b> 12.9450, 77.5100</p>             <p style="margin:2px 0;"><b>ID:</b> vrushabavathi_mysore_road</p>             <p style="font-size:11px;color:#64748b;margin:6px 0 0 0;">Major road crossing; mixed industrial and residential discharge</p>             <p style="margin:4px 0;"><b>Connected to:</b></p>             <ul style="margin:0;padding-left:18px;font-size:12px;">         <li>Vrushabavathi at Nayandahalli (1.2 km)</li><li>Vrushabavathi near RVCE (2.5 km)</li></ul></div></div>`)[0];
+                popup_e5a28f68f30528f0dab2f124c3e182ac.setContent(html_7d660e6bcbb4fffa00829a5a7622dd4c);
+            
+        
+
+        marker_8863611f39858cd3d988bed486c2466d.bindPopup(popup_e5a28f68f30528f0dab2f124c3e182ac)
+        ;
+
+        
+    
+    
+            marker_8863611f39858cd3d988bed486c2466d.bindTooltip(
+                `<div>
+                     Vrushabavathi at Mysore Road Bridge (river)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_8863611f39858cd3d988bed486c2466d.setIcon(icon_0b06992e189e83b494a7785aa343f4b1);
+            
+    
+            var marker_a3a31d9b5c124d89348d098d1cf6847b = L.marker(
+                [12.924, 77.499],
+                {
+}
+            ).addTo(feature_group_62273761af4d5c760ef9c03d90807ec2);
+        
+    
+            var icon_43cd8bafb1e98bad4b0bf8bf4a8d071b = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "water",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_c0a18a4e6c326716d7af089a1f721e90 = L.popup({
+  "maxWidth": 320,
+});
+
+        
+            
+                var html_2a2140a2efaf870925c576c0a44f2b6e = $(`<div id="html_2a2140a2efaf870925c576c0a44f2b6e" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial; min-width:250px;">             <h4 style="margin:0 0 6px 0;">Vrushabavathi near RVCE</h4>             <p style="margin:2px 0;"><b>Type:</b> River</p>             <p style="margin:2px 0;"><b>GPS:</b> 12.9240, 77.4990</p>             <p style="margin:2px 0;"><b>ID:</b> vrushabavathi_rvce</p>             <p style="font-size:11px;color:#64748b;margin:6px 0 0 0;">River segment adjacent to RV College campus; residential sewage dominant</p>             <p style="margin:4px 0;"><b>Connected to:</b></p>             <ul style="margin:0;padding-left:18px;font-size:12px;">         <li>Vrushabavathi at Mysore Road Bridge (2.5 km)</li><li>Campus Drain (RVCE-BU Nala) (0.3 km)</li><li>Vrushabavathi at Kengeri (1.5 km)</li></ul></div></div>`)[0];
+                popup_c0a18a4e6c326716d7af089a1f721e90.setContent(html_2a2140a2efaf870925c576c0a44f2b6e);
+            
+        
+
+        marker_a3a31d9b5c124d89348d098d1cf6847b.bindPopup(popup_c0a18a4e6c326716d7af089a1f721e90)
+        ;
+
+        
+    
+    
+            marker_a3a31d9b5c124d89348d098d1cf6847b.bindTooltip(
+                `<div>
+                     Vrushabavathi near RVCE (river)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_a3a31d9b5c124d89348d098d1cf6847b.setIcon(icon_43cd8bafb1e98bad4b0bf8bf4a8d071b);
+            
+    
+            var marker_43a09b07f063f1b0ffc8cc65e2d6c3d2 = L.marker(
+                [12.927, 77.501],
+                {
+}
+            ).addTo(feature_group_62273761af4d5c760ef9c03d90807ec2);
+        
+    
+            var icon_d708fa8110024c061fc0862db7242d69 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "arrow-down",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_649df10990f39a3d6a13d36884d94bc3 = L.popup({
+  "maxWidth": 320,
+});
+
+        
+            
+                var html_d8f434853077a2b1b631ae48989222d5 = $(`<div id="html_d8f434853077a2b1b631ae48989222d5" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial; min-width:250px;">             <h4 style="margin:0 0 6px 0;">Campus Drain (RVCE-BU Nala)</h4>             <p style="margin:2px 0;"><b>Type:</b> Drain</p>             <p style="margin:2px 0;"><b>GPS:</b> 12.9270, 77.5010</p>             <p style="margin:2px 0;"><b>ID:</b> campus_drain</p>             <p style="font-size:11px;color:#64748b;margin:6px 0 0 0;">Storm drain connecting campus area to Vrushabavathi; carries domestic sewage</p>             <p style="margin:4px 0;"><b>Connected to:</b></p>             <ul style="margin:0;padding-left:18px;font-size:12px;">         <li>Vrushabavathi near RVCE (0.3 km)</li><li>Jnana Bharathi Lake (0.5 km)</li></ul></div></div>`)[0];
+                popup_649df10990f39a3d6a13d36884d94bc3.setContent(html_d8f434853077a2b1b631ae48989222d5);
+            
+        
+
+        marker_43a09b07f063f1b0ffc8cc65e2d6c3d2.bindPopup(popup_649df10990f39a3d6a13d36884d94bc3)
+        ;
+
+        
+    
+    
+            marker_43a09b07f063f1b0ffc8cc65e2d6c3d2.bindTooltip(
+                `<div>
+                     Campus Drain (RVCE-BU Nala) (drain)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_43a09b07f063f1b0ffc8cc65e2d6c3d2.setIcon(icon_d708fa8110024c061fc0862db7242d69);
+            
+    
+            var marker_733324f3bdb163af69e32a36d328c366 = L.marker(
+                [12.935, 77.505],
+                {
+}
+            ).addTo(feature_group_62273761af4d5c760ef9c03d90807ec2);
+        
+    
+            var icon_dee998d1b74cc0c74c23cd6b3c3321c7 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "purple",
+  "iconColor": "white",
+  "icon": "tint",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_8ad005a5e97ddaa9b299fc40f9ea88d7 = L.popup({
+  "maxWidth": 320,
+});
+
+        
+            
+                var html_fe5e7e533b8f15b625ddef767279ca48 = $(`<div id="html_fe5e7e533b8f15b625ddef767279ca48" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial; min-width:250px;">             <h4 style="margin:0 0 6px 0;">Jnana Bharathi Lake</h4>             <p style="margin:2px 0;"><b>Type:</b> Lake</p>             <p style="margin:2px 0;"><b>GPS:</b> 12.9350, 77.5050</p>             <p style="margin:2px 0;"><b>ID:</b> jnana_bharathi_lake</p>             <p style="font-size:11px;color:#64748b;margin:6px 0 0 0;">Lake near Bangalore University campus; receives runoff via campus drain</p>             <p style="margin:4px 0;"><b>Connected to:</b></p>             <ul style="margin:0;padding-left:18px;font-size:12px;">         <li>Campus Drain (RVCE-BU Nala) (0.5 km)</li></ul></div></div>`)[0];
+                popup_8ad005a5e97ddaa9b299fc40f9ea88d7.setContent(html_fe5e7e533b8f15b625ddef767279ca48);
+            
+        
+
+        marker_733324f3bdb163af69e32a36d328c366.bindPopup(popup_8ad005a5e97ddaa9b299fc40f9ea88d7)
+        ;
+
+        
+    
+    
+            marker_733324f3bdb163af69e32a36d328c366.bindTooltip(
+                `<div>
+                     Jnana Bharathi Lake (lake)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_733324f3bdb163af69e32a36d328c366.setIcon(icon_dee998d1b74cc0c74c23cd6b3c3321c7);
+            
+    
+            var marker_f028e5fec5537d5865dd2944594c72dc = L.marker(
+                [12.912, 77.485],
+                {
+}
+            ).addTo(feature_group_62273761af4d5c760ef9c03d90807ec2);
+        
+    
+            var icon_dce5a8bd4a15f30c955593e6616477c8 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "water",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_579f2cbb7c457f78947822c9c1feeebe = L.popup({
+  "maxWidth": 320,
+});
+
+        
+            
+                var html_654c047c4abfc5307de5cbe7af0d26cb = $(`<div id="html_654c047c4abfc5307de5cbe7af0d26cb" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial; min-width:250px;">             <h4 style="margin:0 0 6px 0;">Vrushabavathi at Kengeri</h4>             <p style="margin:2px 0;"><b>Type:</b> River</p>             <p style="margin:2px 0;"><b>GPS:</b> 12.9120, 77.4850</p>             <p style="margin:2px 0;"><b>ID:</b> vrushabavathi_kengeri</p>             <p style="font-size:11px;color:#64748b;margin:6px 0 0 0;">Downstream segment; pollution diluted by tributaries</p>             <p style="margin:4px 0;"><b>Connected to:</b></p>             <ul style="margin:0;padding-left:18px;font-size:12px;">         <li>Vrushabavathi near RVCE (1.5 km)</li><li>Kengeri Village Pond (0.4 km)</li><li>Kommaghatta Lake (2.0 km)</li></ul></div></div>`)[0];
+                popup_579f2cbb7c457f78947822c9c1feeebe.setContent(html_654c047c4abfc5307de5cbe7af0d26cb);
+            
+        
+
+        marker_f028e5fec5537d5865dd2944594c72dc.bindPopup(popup_579f2cbb7c457f78947822c9c1feeebe)
+        ;
+
+        
+    
+    
+            marker_f028e5fec5537d5865dd2944594c72dc.bindTooltip(
+                `<div>
+                     Vrushabavathi at Kengeri (river)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_f028e5fec5537d5865dd2944594c72dc.setIcon(icon_dce5a8bd4a15f30c955593e6616477c8);
+            
+    
+            var marker_917d3b912c5caeb1393cc8e87b1957d5 = L.marker(
+                [12.91, 77.487],
+                {
+}
+            ).addTo(feature_group_62273761af4d5c760ef9c03d90807ec2);
+        
+    
+            var icon_5f28207ac859adbfe060f6b79820c59b = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "purple",
+  "iconColor": "white",
+  "icon": "circle",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_0f83ccdf25d0e9e94dcbbd9f166355c7 = L.popup({
+  "maxWidth": 320,
+});
+
+        
+            
+                var html_ea185b0ea3ef4980809de653bc309951 = $(`<div id="html_ea185b0ea3ef4980809de653bc309951" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial; min-width:250px;">             <h4 style="margin:0 0 6px 0;">Kengeri Village Pond</h4>             <p style="margin:2px 0;"><b>Type:</b> Pond</p>             <p style="margin:2px 0;"><b>GPS:</b> 12.9100, 77.4870</p>             <p style="margin:2px 0;"><b>ID:</b> kengeri_pond</p>             <p style="font-size:11px;color:#64748b;margin:6px 0 0 0;">Small village pond connected to river via overflow channel</p>             <p style="margin:4px 0;"><b>Connected to:</b></p>             <ul style="margin:0;padding-left:18px;font-size:12px;">         <li>Vrushabavathi at Kengeri (0.4 km)</li></ul></div></div>`)[0];
+                popup_0f83ccdf25d0e9e94dcbbd9f166355c7.setContent(html_ea185b0ea3ef4980809de653bc309951);
+            
+        
+
+        marker_917d3b912c5caeb1393cc8e87b1957d5.bindPopup(popup_0f83ccdf25d0e9e94dcbbd9f166355c7)
+        ;
+
+        
+    
+    
+            marker_917d3b912c5caeb1393cc8e87b1957d5.bindTooltip(
+                `<div>
+                     Kengeri Village Pond (pond)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_917d3b912c5caeb1393cc8e87b1957d5.setIcon(icon_5f28207ac859adbfe060f6b79820c59b);
+            
+    
+            var marker_5f8ab0c50b0ee06e941f8cbc10577f95 = L.marker(
+                [12.905, 77.48],
+                {
+}
+            ).addTo(feature_group_62273761af4d5c760ef9c03d90807ec2);
+        
+    
+            var icon_c398477ff4bdb35f9e2afc988b5b6f0a = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "arrows-alt",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_dda504cea979d215376095b934ba00c4 = L.popup({
+  "maxWidth": 320,
+});
+
+        
+            
+                var html_b74905e648fd89b7b128f04216329aaf = $(`<div id="html_b74905e648fd89b7b128f04216329aaf" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial; min-width:250px;">             <h4 style="margin:0 0 6px 0;">Kengeri Agricultural Canal</h4>             <p style="margin:2px 0;"><b>Type:</b> Channel</p>             <p style="margin:2px 0;"><b>GPS:</b> 12.9050, 77.4800</p>             <p style="margin:2px 0;"><b>ID:</b> agricultural_canal</p>             <p style="font-size:11px;color:#64748b;margin:6px 0 0 0;">Irrigation channel drawing from river; serves downstream farms</p>             <p style="margin:4px 0;"><b>Connected to:</b></p>             <ul style="margin:0;padding-left:18px;font-size:12px;">         <li>Vrushabavathi at Kengeri (0.8 km)</li><li>Kommaghatta Lake (0.6 km)</li></ul></div></div>`)[0];
+                popup_dda504cea979d215376095b934ba00c4.setContent(html_b74905e648fd89b7b128f04216329aaf);
+            
+        
+
+        marker_5f8ab0c50b0ee06e941f8cbc10577f95.bindPopup(popup_dda504cea979d215376095b934ba00c4)
+        ;
+
+        
+    
+    
+            marker_5f8ab0c50b0ee06e941f8cbc10577f95.bindTooltip(
+                `<div>
+                     Kengeri Agricultural Canal (channel)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_5f8ab0c50b0ee06e941f8cbc10577f95.setIcon(icon_c398477ff4bdb35f9e2afc988b5b6f0a);
+            
+    
+            var marker_8cfe8837aa06b7e6cf21bb1d170cb56a = L.marker(
+                [12.895, 77.475],
+                {
+}
+            ).addTo(feature_group_62273761af4d5c760ef9c03d90807ec2);
+        
+    
+            var icon_3d913d9436875d03742ff101cbb12494 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "purple",
+  "iconColor": "white",
+  "icon": "tint",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_0fdfa8a2cf263881e8705695041aae8a = L.popup({
+  "maxWidth": 320,
+});
+
+        
+            
+                var html_9532e5a693aee82fdef07427b86f83de = $(`<div id="html_9532e5a693aee82fdef07427b86f83de" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial; min-width:250px;">             <h4 style="margin:0 0 6px 0;">Kommaghatta Lake</h4>             <p style="margin:2px 0;"><b>Type:</b> Lake</p>             <p style="margin:2px 0;"><b>GPS:</b> 12.8950, 77.4750</p>             <p style="margin:2px 0;"><b>ID:</b> kommaghatta_lake</p>             <p style="font-size:11px;color:#64748b;margin:6px 0 0 0;">Downstream lake; receives diluted upstream pollution via canal</p>             <p style="margin:4px 0;"><b>Connected to:</b></p>             <ul style="margin:0;padding-left:18px;font-size:12px;">         <li>Kengeri Agricultural Canal (0.6 km)</li><li>Vrushabavathi at Kengeri (2.0 km)</li></ul></div></div>`)[0];
+                popup_0fdfa8a2cf263881e8705695041aae8a.setContent(html_9532e5a693aee82fdef07427b86f83de);
+            
+        
+
+        marker_8cfe8837aa06b7e6cf21bb1d170cb56a.bindPopup(popup_0fdfa8a2cf263881e8705695041aae8a)
+        ;
+
+        
+    
+    
+            marker_8cfe8837aa06b7e6cf21bb1d170cb56a.bindTooltip(
+                `<div>
+                     Kommaghatta Lake (lake)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_8cfe8837aa06b7e6cf21bb1d170cb56a.setIcon(icon_3d913d9436875d03742ff101cbb12494);
+            
+    
+            feature_group_62273761af4d5c760ef9c03d90807ec2.addTo(map_66d8b6f5d72c2eea5a546e4ee61010ba);
+        
+    
+            var layer_control_4b5b17f0f3528d2b10d8bfc44dbfab08_layers = {
+                base_layers : {
+                    "openstreetmap" : tile_layer_2ad5c8994cd7cb49f87e1960995d961d,
+                    "Satellite View" : tile_layer_b84c19ab9511305f23fbe627105a2ca5,
+                },
+                overlays :  {
+                    "Connections" : feature_group_01a326454760c9f3f8b17f783cea9041,
+                    "Water Bodies" : feature_group_62273761af4d5c760ef9c03d90807ec2,
+                },
+            };
+            let layer_control_4b5b17f0f3528d2b10d8bfc44dbfab08 = L.control.layers(
+                layer_control_4b5b17f0f3528d2b10d8bfc44dbfab08_layers.base_layers,
+                layer_control_4b5b17f0f3528d2b10d8bfc44dbfab08_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": true,
+  "autoZIndex": true,
+}
+            ).addTo(map_66d8b6f5d72c2eea5a546e4ee61010ba);
+
+        
+</script>
+</html>

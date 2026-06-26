@@ -6,3 +6,6 @@ geopy>=2.4.0
 requests>=2.32.0
 pydantic>=2.7.0
 pyserial>=3.5
+folium>=0.20.0
+statsmodels>=0.14.0
+pandas>=2.2.0

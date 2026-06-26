@@ -99,7 +99,7 @@ export default function AlgalBloom() {
                 <YAxis yAxisId="left" tick={{ fill: '#444', fontSize: 10 }} />
                 <YAxis yAxisId="right" orientation="right" tick={{ fill: '#444', fontSize: 10 }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 11, color: '#666' }} />
+                <Legend wrapperStyle={{ fontSize: 11, color: 'var(--text-secondary)' }} />
                 <Line yAxisId="left" type="monotone" dataKey="nitrate" name="Nitrate (ppm)"
                   stroke="#ffaa00" strokeWidth={1.5} dot={false} animationDuration={600} />
                 <Line yAxisId="right" type="monotone" dataKey="temperature" name="Temperature (C)"
@@ -113,7 +113,7 @@ export default function AlgalBloom() {
       {/* Bloom rules explanation */}
       <div className="card" style={{ marginTop: 8 }}>
         <div className="card-title">Assessment Rules</div>
-        <div style={{ fontSize: 12, color: '#888', lineHeight: 2 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 2 }}>
           <div><span className="badge badge-high">HIGH</span> Nitrate &gt; 25 ppm AND Temperature &gt; 30 C</div>
           <div><span className="badge badge-moderate">MODERATE</span> Nitrate &gt; 12 ppm</div>
           <div><span className="badge badge-low">LOW</span> All other conditions</div>
